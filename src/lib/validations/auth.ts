@@ -11,7 +11,6 @@ export const loginSchema = z.object({
   password: z
     .string()
     .min(1, "Passwort ist erforderlich"),
-  rememberMe: z.boolean().optional(),
 });
 
 export const registerSchema = z.object({

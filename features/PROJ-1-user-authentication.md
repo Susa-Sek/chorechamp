@@ -65,9 +65,9 @@ Enable users to create accounts and authenticate securely to access their househ
 **Acceptance Criteria:**
 - [x] Display name (required)
 - [x] Avatar upload (optional, default avatar provided) - Auto-generated initials avatar
-- [x] Email display (read-only, change via separate flow)
+- [ ] BUG: Email display shows user ID instead of email address
 - [x] Save changes with success feedback
-- [ ] Cancel changes option
+- [ ] Cancel changes option - NOT IMPLEMENTED
 
 ## Edge Cases
 - Email already exists during registration
@@ -295,3 +295,223 @@ When building the mobile app, these can be shared:
 Platform-specific:
 - **Web:** Next.js pages, server components, cookies
 - **Mobile:** React Navigation screens, AsyncStorage for sessions
+
+---
+
+## QA Test Results
+
+**Tested:** 2026-02-23
+**App URL:** http://localhost:3000
+**Tester:** QA Engineer (AI)
+**Build Status:** PASSED (Next.js 16.1.1)
+
+### Acceptance Criteria Status
+
+#### AC-1.1: User Registration
+- [x] Email validation with proper format check (Zod schema with `.email()`)
+- [x] Password minimum 8 characters with complexity rules (requires uppercase, lowercase, number)
+- [x] Confirmation email infrastructure in place (`emailRedirectTo` configured)
+- [x] Duplicate email detection with clear error message (German: "E-Mail bereits registriert")
+- [ ] BUG: Redirect to onboarding after registration - User sees success message and must manually go to login (expected: auto-redirect to dashboard)
+
+#### AC-1.2: User Login
+- [x] Login form with email and password fields
+- [ ] BUG: "Remember me" checkbox is NON-FUNCTIONAL - value is collected but not passed to Supabase signIn
+- [x] Clear error messages for invalid credentials (German: "Ungultige Anmeldedaten")
+- [x] Redirect to dashboard after successful login (uses `window.location.href`)
+- [x] Loading state during authentication ("Wird geladen...")
+
+#### AC-1.3: Password Reset
+- [x] "Forgot password" link on login page
+- [x] Email input for password reset
+- [x] Password reset email sent via Supabase
+- [x] Secure token-based reset link (Supabase handles tokens)
+- [x] New password must meet complexity requirements (Zod validation)
+- [ ] BUG: Reset password page shows error for missing token but doesn't prevent form submission
+
+#### AC-1.4: User Logout
+- [x] Logout button accessible from profile page
+- [x] Session cleared on logout (Supabase signOut + state reset)
+- [x] Redirect to landing page (`window.location.href = "/"`)
+- [x] No cached sensitive data after logout (session cleared from state and cookies)
+
+#### AC-1.5: User Profile
+- [x] Display name (required, min 2 chars, max 50 chars)
+- [x] Auto-generated initials avatar with color gradient
+- [ ] BUG: Email field displays `profile.id` (UUID) instead of `profile.email` - shows user ID in email field!
+- [x] Save changes with success feedback ("Profil erfolgreich aktualisiert!")
+- [ ] NOT IMPLEMENTED: Cancel changes option - no button to revert form changes
+
+### Edge Cases Status
+
+#### EC-1: Email already exists during registration
+- [x] Handled correctly - Supabase returns error, translated to German
+
+#### EC-2: Invalid email format
+- [x] Handled correctly - Zod validation shows "Ungultige E-Mail-Adresse"
+
+#### EC-3: Password too weak
+- [x] Handled correctly - Zod validation enforces 8 chars, uppercase, lowercase, number
+- [x] Password strength indicator shows "Schwach", "Mittel", "Stark"
+
+#### EC-4: Expired password reset token
+- [x] Partially handled - Error message shown but form still submittable
+
+#### EC-5: Session expired during activity
+- [x] Handled - Middleware refreshes session, protected layout checks auth state
+
+#### EC-6: Network error during authentication
+- [ ] NOT HANDLED - No network error handling, user sees generic Supabase error
+
+#### EC-7: Multiple failed login attempts (rate limiting)
+- [x] Handled by Supabase built-in rate limiting
+
+### Security Audit Results
+
+#### Authentication Security
+- [x] Password hashing: Handled by Supabase (bcrypt/scrypt)
+- [x] Session cookies: HttpOnly, Secure (in production), SameSite=Lax
+- [x] Session management: Server-side via Supabase SSR
+- [x] Auth state persistence: Supabase handles token refresh
+
+#### Authorization (Row Level Security)
+- [x] RLS enabled on `profiles` table
+- [x] SELECT policy: Users can only view own profile
+- [x] INSERT policy: Users can only insert own profile
+- [x] UPDATE policy: Users can only update own profile
+- [x] DELETE policy: Users can only delete own profile
+- [x] Foreign key cascade: ON DELETE CASCADE for user deletion
+
+#### Input Validation
+- [x] Client-side validation: Zod schemas on all forms
+- [ ] PARTIAL: No server-side API routes - validation relies on Supabase and client-side only
+- [x] SQL injection: Protected by Supabase parameterized queries
+- [x] XSS: React auto-escapes, no `dangerouslySetInnerHTML` used
+
+#### Security Headers
+- [ ] NOT CONFIGURED: No explicit security headers in middleware or next.config.ts
+- [ ] Missing: X-Frame-Options, X-Content-Type-Options, Content-Security-Policy
+
+#### CSRF Protection
+- [x] Supabase SSR handles CSRF via SameSite cookies
+
+#### Secrets Management
+- [x] Environment variables used for Supabase credentials
+- [x] `.env.local.example` provided with dummy values
+- [x] `.env.local` in `.gitignore`
+
+#### Protected Routes
+- [x] Middleware protects `/dashboard` and `/profile` routes
+- [x] Client-side auth check in protected layout
+- [x] Authenticated users redirected away from auth pages
+
+### Cross-Browser Testing
+- [ ] Chrome - NOT TESTED (manual testing required)
+- [ ] Firefox - NOT TESTED (manual testing required)
+- [ ] Safari - NOT TESTED (manual testing required)
+
+### Responsive Design Testing
+- [ ] Mobile (375px) - NOT TESTED (manual testing required)
+- [ ] Tablet (768px) - NOT TESTED (manual testing required)
+- [ ] Desktop (1440px) - NOT TESTED (manual testing required)
+
+### Bugs Found
+
+#### BUG-1: "Remember Me" Checkbox Non-Functional
+- **Severity:** Medium
+- **Steps to Reproduce:**
+  1. Go to `/auth/login`
+  2. Check "Angemeldet bleiben" (Remember Me) checkbox
+  3. Log in with credentials
+  4. Close browser and reopen
+  5. Expected: Session persists longer
+  6. Actual: Checkbox value is ignored, no effect on session duration
+- **Root Cause:** `signIn` function in `auth-provider.tsx` does not use `rememberMe` parameter
+- **Fix Location:** `src/components/auth/auth-provider.tsx:114-125`
+- **Priority:** Fix before deployment
+
+#### BUG-2: Email Field Shows User ID Instead of Email
+- **Severity:** High
+- **Steps to Reproduce:**
+  1. Log in and go to `/profile`
+  2. Look at the Email field
+  3. Expected: Shows user's email address
+  4. Actual: Shows user's UUID (e.g., "a1b2c3d4-...")
+- **Root Cause:** `src/app/(protected)/profile/page.tsx:169` uses `profile?.id` instead of email
+- **Fix Location:** `src/app/(protected)/profile/page.tsx:169`
+- **Priority:** Fix before deployment
+
+#### BUG-3: No Cancel Button on Profile Edit
+- **Severity:** Low
+- **Steps to Reproduce:**
+  1. Go to `/profile`
+  2. Edit display name
+  3. Try to cancel changes
+  4. Expected: Cancel button to revert form
+  5. Actual: No cancel button, must manually revert or navigate away
+- **Priority:** Fix in next sprint
+
+#### BUG-4: Password Reset Page Allows Submission Without Token
+- **Severity:** Medium
+- **Steps to Reproduce:**
+  1. Navigate directly to `/auth/reset-password` without token
+  2. Error message shows "Ungultiger Link"
+  3. Form is still visible and submittable
+  4. Expected: Form hidden or disabled when no valid token
+- **Priority:** Fix in next sprint
+
+#### BUG-5: No Network Error Handling
+- **Severity:** Low
+- **Steps to Reproduce:**
+  1. Disconnect network
+  2. Try to log in
+  3. Expected: Friendly error message like "Netzwerkfehler"
+  4. Actual: Generic Supabase error or no feedback
+- **Priority:** Nice to have
+
+#### BUG-6: Missing Security Headers
+- **Severity:** Medium
+- **Issue:** No security headers configured in middleware or Next.js config
+- **Missing Headers:**
+  - X-Frame-Options: DENY
+  - X-Content-Type-Options: nosniff
+  - Referrer-Policy: origin-when-cross-origin
+  - Strict-Transport-Security (production)
+- **Priority:** Fix before deployment
+
+#### BUG-7: No Redirect After Registration
+- **Severity:** Low
+- **Steps to Reproduce:**
+  1. Complete registration form
+  2. Submit
+  3. Expected: Redirect to dashboard (since email confirmation disabled for MVP)
+  4. Actual: Shows success message with "Zum Login" button, user must manually navigate
+- **Priority:** Fix in next sprint
+
+### Architecture Observations
+
+#### API Routes Not Implemented
+The spec mentions API endpoints (`POST /api/auth/register`, etc.) but they are not implemented. The app uses Supabase client directly from the browser. This is acceptable for MVP but differs from the spec.
+
+**Recommendation:** Either implement the API routes or update the spec to reflect the actual architecture.
+
+### Summary
+
+| Category | Status |
+|----------|--------|
+| Acceptance Criteria | 20/26 passed (77%) |
+| Bugs Found | 7 total (2 High, 3 Medium, 2 Low) |
+| Security | Issues found (missing security headers) |
+| Production Ready | **NO** |
+
+### Critical/High Priority Bugs to Fix Before Deployment
+1. **BUG-2:** Email field shows UUID instead of email (High)
+2. **BUG-6:** Missing security headers (Medium - but security-critical)
+
+### Recommendation
+**DO NOT DEPLOY** until the following are fixed:
+1. Email display bug (shows UUID instead of email)
+2. Security headers are configured
+3. "Remember Me" functionality is implemented or checkbox is removed
+
+After fixes, run `/qa` again to verify.

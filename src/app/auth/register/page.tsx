@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sparkles, Mail, Lock, Eye, EyeOff, User, Check } from "lucide-react";
+import { Sparkles, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,7 +37,6 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     label: "",
@@ -76,34 +75,12 @@ export default function RegisterPage() {
       return;
     }
 
-    setSuccess(true);
-    setIsLoading(false);
+    // Redirect to dashboard since email confirmation is disabled for MVP
+    // The middleware will handle the session
+    window.location.href = "/dashboard";
   };
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
-        <Card className="w-full max-w-md animate-scale-in text-center">
-          <CardHeader>
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl font-bold">Registrierung erfolgreich!</CardTitle>
-            <CardDescription>
-              Du kannst dich jetzt mit deinen Daten anmelden.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="justify-center">
-            <Link href="/auth/login">
-              <Button className="w-full">Zum Login</Button>
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
+  // Success state removed - user is redirected directly to dashboard
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">

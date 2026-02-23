@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardContent,
@@ -29,7 +27,6 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { loginSchema, LoginFormData } from "@/lib/validations/auth";
 
 export default function LoginPage() {
-  const router = useRouter();
   const { signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +37,6 @@ export default function LoginPage() {
     defaultValues: {
       email: "",
       password: "",
-      rememberMe: false,
     },
   });
 
@@ -139,25 +135,7 @@ export default function LoginPage() {
                 )}
               />
 
-              <div className="flex items-center justify-between">
-                <FormField
-                  control={form.control}
-                  name="rememberMe"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel className="text-sm font-normal cursor-pointer">
-                        Angemeldet bleiben
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-
+              <div className="flex justify-end">
                 <Link
                   href="/auth/forgot-password"
                   className="text-sm text-primary hover:underline"

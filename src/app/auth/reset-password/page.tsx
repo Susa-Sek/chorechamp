@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sparkles, Lock, Eye, EyeOff, Check } from "lucide-react";
+import { Sparkles, Lock, Eye, EyeOff, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,7 +33,6 @@ import {
 } from "@/lib/validations/auth";
 
 function ResetPasswordContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { updatePassword } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -41,6 +40,7 @@ function ResetPasswordContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [hasValidToken, setHasValidToken] = useState(true);
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     label: "",
@@ -67,13 +67,21 @@ function ResetPasswordContent() {
 
   // Check if we have a valid reset token
   useEffect(() => {
-    const token = searchParams.get("token") || searchParams.get("access_token");
-    if (!token) {
+    const token = searchParams.get("token") || searchParams.get("access_token") || searchParams.get("code");
+    const type = searchParams.get("type");
+
+    // Check for recovery type or presence of access_token/code
+    if (!token || (type && type !== "recovery")) {
+      setHasValidToken(false);
       setError("Ungültiger oder abgelaufener Link. Bitte fordere einen neuen an.");
     }
   }, [searchParams]);
 
   const onSubmit = async (data: ResetPasswordFormData) => {
+    if (!hasValidToken) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -88,6 +96,32 @@ function ResetPasswordContent() {
     setSuccess(true);
     setIsLoading(false);
   };
+
+  // Invalid token state
+  if (!hasValidToken && !success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
+        <Card className="w-full max-w-md animate-scale-in text-center">
+          <CardHeader>
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertCircle className="w-8 h-8 text-destructive" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold">Link ungültig</CardTitle>
+            <CardDescription>
+              Dieser Link ist abgelaufen oder wurde bereits verwendet. Bitte fordere einen neuen Link an.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="justify-center">
+            <Link href="/auth/forgot-password">
+              <Button>Neuen Link anfordern</Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -215,7 +249,7 @@ function ResetPasswordContent() {
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading || !hasValidToken}>
                 {isLoading ? "Wird gespeichert..." : "Passwort ändern"}
               </Button>
             </form>

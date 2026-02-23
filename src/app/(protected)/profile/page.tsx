@@ -27,10 +27,11 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { profileSchema, ProfileFormData } from "@/lib/validations/auth";
 
 export default function ProfilePage() {
-  const { profile, updateProfile, signOut } = useAuth();
+  const { user, profile, updateProfile, signOut } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -38,6 +39,14 @@ export default function ProfilePage() {
       displayName: profile?.displayName || "",
     },
   });
+
+  // Reset form when profile changes or canceling edit
+  const handleCancel = () => {
+    form.reset({ displayName: profile?.displayName || "" });
+    setIsEditing(false);
+    setError(null);
+    setSuccess(false);
+  };
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
@@ -50,6 +59,7 @@ export default function ProfilePage() {
       setError(error);
     } else {
       setSuccess(true);
+      setIsEditing(false);
     }
 
     setIsLoading(false);
@@ -166,21 +176,34 @@ export default function ProfilePage() {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="email"
-                      value={profile?.id || ""}
+                      value={user?.email || ""}
                       disabled
                       className="pl-10 bg-muted"
                       placeholder="E-Mail wird vom System verwaltet"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    E-Mail-Änderungen werden vom Authentifizierungssystem verwaltet.
+                    E-Mail-Änderungen werden über die Authentifizierungseinstellungen verwaltet.
                   </p>
                 </div>
 
-                <Button type="submit" disabled={isLoading} className="gap-2">
-                  <Save className="w-4 h-4" />
-                  {isLoading ? "Speichern..." : "Speichern"}
-                </Button>
+                <div className="flex gap-3">
+                  {isEditing ? (
+                    <>
+                      <Button type="submit" disabled={isLoading} className="gap-2">
+                        <Save className="w-4 h-4" />
+                        {isLoading ? "Speichern..." : "Speichern"}
+                      </Button>
+                      <Button type="button" variant="outline" onClick={handleCancel}>
+                        Abbrechen
+                      </Button>
+                    </>
+                  ) : (
+                    <Button type="button" onClick={() => setIsEditing(true)}>
+                      Profil bearbeiten
+                    </Button>
+                  )}
+                </div>
               </form>
             </Form>
           </CardContent>

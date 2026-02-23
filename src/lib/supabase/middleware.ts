@@ -61,5 +61,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Add security headers to all responses
+  supabaseResponse.headers.set('X-Frame-Options', 'DENY');
+  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff');
+  supabaseResponse.headers.set('Referrer-Policy', 'origin-when-cross-origin');
+  supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block');
+
+  // HSTS for production (only add if request is HTTPS)
+  if (request.nextUrl.protocol === 'https:') {
+    supabaseResponse.headers.set(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains'
+    );
+  }
+
   return supabaseResponse;
 }
