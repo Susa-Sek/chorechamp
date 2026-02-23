@@ -1,7 +1,8 @@
 # PROJ-1: User Authentication
 
-> Status: Planned
+> Status: In Review
 > Created: 2026-02-23
+> Updated: 2026-02-23
 > Dependencies: None
 
 ## Overview
@@ -15,11 +16,11 @@ Enable users to create accounts and authenticate securely to access their househ
 **So that** I can access ChoreChamp with my personal profile
 
 **Acceptance Criteria:**
-- [ ] Email validation with proper format check
-- [ ] Password minimum 8 characters with complexity rules
-- [ ] Confirmation email sent (can be disabled for MVP)
-- [ ] Duplicate email detection with clear error message
-- [ ] Redirect to onboarding after successful registration
+- [x] Email validation with proper format check
+- [x] Password minimum 8 characters with complexity rules
+- [x] Confirmation email sent (can be disabled for MVP)
+- [x] Duplicate email detection with clear error message
+- [x] Redirect to onboarding after successful registration
 
 ### US-1.2: User Login
 **As a** registered user
@@ -27,11 +28,11 @@ Enable users to create accounts and authenticate securely to access their househ
 **So that** I can access my household and chores
 
 **Acceptance Criteria:**
-- [ ] Login form with email and password fields
-- [ ] "Remember me" option for extended session
-- [ ] Clear error messages for invalid credentials
-- [ ] Redirect to dashboard after successful login
-- [ ] Loading state during authentication
+- [x] Login form with email and password fields
+- [x] "Remember me" option for extended session
+- [x] Clear error messages for invalid credentials
+- [x] Redirect to dashboard after successful login
+- [x] Loading state during authentication
 
 ### US-1.3: Password Reset
 **As a** user who forgot my password
@@ -39,11 +40,11 @@ Enable users to create accounts and authenticate securely to access their househ
 **So that** I can regain access to my account
 
 **Acceptance Criteria:**
-- [ ] "Forgot password" link on login page
-- [ ] Email input for password reset
-- [ ] Password reset email sent
-- [ ] Secure token-based reset link
-- [ ] New password must meet complexity requirements
+- [x] "Forgot password" link on login page
+- [x] Email input for password reset
+- [x] Password reset email sent
+- [x] Secure token-based reset link
+- [x] New password must meet complexity requirements
 
 ### US-1.4: User Logout
 **As a** logged-in user
@@ -51,10 +52,10 @@ Enable users to create accounts and authenticate securely to access their househ
 **So that** my account remains secure on shared devices
 
 **Acceptance Criteria:**
-- [ ] Logout button accessible from navigation
-- [ ] Session cleared on logout
-- [ ] Redirect to landing page
-- [ ] No cached sensitive data after logout
+- [x] Logout button accessible from navigation
+- [x] Session cleared on logout
+- [x] Redirect to landing page
+- [x] No cached sensitive data after logout
 
 ### US-1.5: User Profile
 **As a** logged-in user
@@ -62,10 +63,10 @@ Enable users to create accounts and authenticate securely to access their househ
 **So that** my information is up to date
 
 **Acceptance Criteria:**
-- [ ] Display name (required)
-- [ ] Avatar upload (optional, default avatar provided)
-- [ ] Email display (read-only, change via separate flow)
-- [ ] Save changes with success feedback
+- [x] Display name (required)
+- [x] Avatar upload (optional, default avatar provided) - Auto-generated initials avatar
+- [x] Email display (read-only, change via separate flow)
+- [x] Save changes with success feedback
 - [ ] Cancel changes option
 
 ## Edge Cases

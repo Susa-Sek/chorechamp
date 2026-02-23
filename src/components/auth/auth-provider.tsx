@@ -125,13 +125,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, displayName: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           display_name: displayName,
         },
+        // Redirect to callback route for email confirmation (if enabled)
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -139,18 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: getErrorMessage(error) };
     }
 
-    // Create profile after signup
-    if (data.user) {
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: data.user.id,
-        display_name: displayName,
-      });
-
-      if (profileError) {
-        console.error("Error creating profile:", profileError);
-      }
-    }
-
+    // Profile is created automatically by the database trigger
     return { error: null };
   };
 
@@ -192,9 +183,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: "Nicht angemeldet" };
     }
 
-    const updateData: { display_name: string; avatar_url?: string; updated_at: string } = {
+    const updateData: { display_name: string; avatar_url?: string } = {
       display_name: displayName,
-      updated_at: new Date().toISOString(),
     };
 
     if (avatarUrl !== undefined) {
