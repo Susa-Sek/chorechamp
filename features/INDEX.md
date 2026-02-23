@@ -33,3 +33,17 @@
 5. **PROJ-5: Gamification - Points** - Engagement layer
 6. **PROJ-6: Gamification - Rewards** (P1) - Enhanced engagement
 7. **PROJ-7: Gamification - Levels & Badges** (P1) - Long-term progression
+
+## Platform Strategy
+
+| Phase | Platform | Tech |
+|-------|----------|------|
+| MVP (P0) | Responsive Web-App | Next.js + Tailwind CSS |
+| P1 | Extended Features | Next.js |
+| P2 | Mobile Apps | React Native (shared code with web) |
+
+**Code Sharing Considerations:**
+- Shared TypeScript types/interfaces
+- Shared API client logic
+- Shared business logic (points calculation, gamification rules)
+- Platform-specific: UI components, navigation

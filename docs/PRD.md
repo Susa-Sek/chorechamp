@@ -41,10 +41,11 @@ ChoreChamp ist eine Gamification-Plattform für Haushaltsaufgaben, die Familien 
 - Solo-Entwicklung
 - Backend: Supabase (kostenloses Tier für MVP)
 - Frontend: Next.js mit Tailwind CSS
-- Keine native Mobile-App im MVP (responsive Web-App)
+- **Webapp-first-Strategie:** MVP als responsive Web-App, später React Native für Android/iOS
+- Code-Sharing zwischen Web und Mobile berücksichtigen (shared business logic, types, API client)
 
 ## Non-Goals
-- Keine native Mobile-App im MVP
+- Keine native Mobile-App im MVP (Web-App zuerst)
 - Keine KI-Empfehlungen für Aufgabenverteilung
 - Keine Zahlungsfunktionen für Belohnungen
 - Keine Integration mit Smart-Home-Geräten
