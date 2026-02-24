@@ -13,6 +13,15 @@ interface ProfileData {
   avatar_url: string | null;
 }
 
+// Type for recurring chore data
+type RecurringData = {
+  id: string;
+  recurrence_type: string;
+  recurrence_pattern: Record<string, unknown>;
+  next_due_date: string;
+  active: boolean;
+} | null;
+
 // Type for chore data with joined profiles
 interface ChoreWithProfiles {
   id: string;
@@ -32,6 +41,7 @@ interface ChoreWithProfiles {
   assignee: ProfileData | null;
   creator: ProfileData;
   completer: ProfileData | null;
+  recurring: RecurringData[] | null;
 }
 
 // GET /api/chores/[id] - Get chore details
@@ -97,6 +107,13 @@ export async function GET(request: Request, { params }: RouteParams) {
           id,
           display_name,
           avatar_url
+        ),
+        recurring:recurring_chores(
+          id,
+          recurrence_type,
+          recurrence_pattern,
+          next_due_date,
+          active
         )
       `
       )

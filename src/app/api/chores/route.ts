@@ -9,6 +9,15 @@ interface ProfileData {
   avatar_url: string | null;
 }
 
+// Type for recurring chore data
+type RecurringData = {
+  id: string;
+  recurrence_type: string;
+  recurrence_pattern: Record<string, unknown>;
+  next_due_date: string;
+  active: boolean;
+} | null;
+
 // Type for chore data with joined profiles
 interface ChoreWithProfiles {
   id: string;
@@ -28,10 +37,14 @@ interface ChoreWithProfiles {
   assignee: ProfileData | null;
   creator: ProfileData;
   completer: ProfileData | null;
+  recurring: RecurringData[] | null;
 }
 
 // Helper to transform chore data
 function transformChore(chore: ChoreWithProfiles) {
+  // Extract recurring data (it comes as an array from Supabase join)
+  const recurringData = chore.recurring && chore.recurring.length > 0 ? chore.recurring[0] : null;
+
   return {
     id: chore.id,
     householdId: chore.household_id,
@@ -64,6 +77,15 @@ function transformChore(chore: ChoreWithProfiles) {
           id: chore.completer.id,
           displayName: chore.completer.display_name,
           avatarUrl: chore.completer.avatar_url,
+        }
+      : null,
+    recurring: recurringData
+      ? {
+          id: recurringData.id,
+          recurrenceType: recurringData.recurrence_type,
+          recurrencePattern: recurringData.recurrence_pattern,
+          nextDueDate: recurringData.next_due_date,
+          active: recurringData.active,
         }
       : null,
   };
@@ -146,6 +168,13 @@ export async function GET(request: Request) {
           id,
           display_name,
           avatar_url
+        ),
+        recurring:recurring_chores(
+          id,
+          recurrence_type,
+          recurrence_pattern,
+          next_due_date,
+          active
         )
       `,
         { count: "exact" }
