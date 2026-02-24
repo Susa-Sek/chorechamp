@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sparkles, User, Mail, Save, ArrowLeft, LogOut, Home, Users } from "lucide-react";
+import { Sparkles, User, Mail, Save, ArrowLeft, LogOut, Home, Users, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -178,6 +178,26 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Settings Section */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              Einstellungen
+            </CardTitle>
+            <CardDescription>
+              Erinnerungen und Benachrichtigungen
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/settings">
+              <Button variant="outline" size="sm" className="gap-2">
+                Erinnerungen verwalten
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 

@@ -12,6 +12,7 @@ import {
   Undo2,
   Pencil,
   Trash2,
+  Repeat,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Chore,
   DIFFICULTY_LABELS,
   STATUS_LABELS,
@@ -44,6 +51,7 @@ import {
   isChoreOverdue,
   isUndoAvailable,
 } from "@/lib/validations/chore";
+import { formatRecurrencePattern } from "@/lib/validations/recurring";
 import { useState } from "react";
 
 interface ChoreCardProps {
@@ -172,6 +180,34 @@ export function ChoreCard({
                   <Trophy className="w-3 h-3" />
                   {chore.points} P
                 </Badge>
+                {chore.recurring?.active && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="outline"
+                          className="gap-1 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                        >
+                          <Repeat className="w-3 h-3" />
+                          <span className="hidden sm:inline">
+                            {formatRecurrencePattern(
+                              chore.recurring.recurrenceType,
+                              chore.recurring.recurrencePattern as unknown as Record<string, unknown>
+                            )}
+                          </span>
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {formatRecurrencePattern(
+                            chore.recurring.recurrenceType,
+                            chore.recurring.recurrencePattern as unknown as Record<string, unknown>
+                          )}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
 
               {/* Meta Info */}

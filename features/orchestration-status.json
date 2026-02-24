@@ -1,0 +1,81 @@
+{
+  "sessionId": "session-2026-02-24-resume-001",
+  "startedAt": "2026-02-24T18:00:00Z",
+  "updatedAt": "2026-02-24T20:00:00Z",
+  "timeLimit": "PT8H",
+  "currentFeature": "PROJ-4",
+  "currentPhase": "qa",
+  "features": {
+    "PROJ-1": {
+      "status": "completed",
+      "startedAt": "2026-02-24T10:00:00Z",
+      "completedAt": "2026-02-24T11:30:00Z",
+      "phases": {
+        "requirements": "completed",
+        "architecture": "completed",
+        "frontend": "completed",
+        "backend": "completed",
+        "qa": "completed",
+        "deploy": "completed"
+      },
+      "retries": {}
+    },
+    "PROJ-2": {
+      "status": "completed",
+      "startedAt": "2026-02-24T11:30:00Z",
+      "completedAt": "2026-02-24T14:00:00Z",
+      "phases": {
+        "requirements": "completed",
+        "architecture": "completed",
+        "frontend": "completed",
+        "backend": "completed",
+        "qa": "completed",
+        "deploy": "completed"
+      },
+      "retries": {}
+    },
+    "PROJ-3": {
+      "status": "deployed",
+      "startedAt": "2026-02-24T18:00:00Z",
+      "completedAt": "2026-02-24T19:30:00Z",
+      "deployedAt": "2026-02-24T19:30:00Z",
+      "productionUrl": "https://chorechamp.vercel.app",
+      "gitTag": "v1.3.0-PROJ-3",
+      "phases": {
+        "requirements": "completed",
+        "architecture": "completed",
+        "frontend": "completed",
+        "backend": "completed",
+        "qa": "completed",
+        "deploy": "completed"
+      },
+      "qaResults": {
+        "passed": 41,
+        "failed": 5,
+        "criticalBugs": 0,
+        "highBugs": 0,
+        "mediumBugs": 1,
+        "lowBugs": 6,
+        "productionReady": true
+      },
+      "retries": {}
+    },
+    "PROJ-4": {
+      "status": "in_progress",
+      "startedAt": "2026-02-24T19:35:00Z",
+      "phases": {
+        "requirements": "completed",
+        "architecture": "completed",
+        "frontend": "completed",
+        "backend": "completed"
+      },
+      "retries": {}
+    }
+  },
+  "errors": [],
+  "completedFeatures": ["PROJ-1", "PROJ-2", "PROJ-3"],
+  "skippedFeatures": [],
+  "pendingFeatures": ["PROJ-4", "PROJ-5", "PROJ-6", "PROJ-7"],
+  "phaseTimeouts": {},
+  "bugFixAttempts": {}
+}

@@ -1,6 +1,11 @@
 // Shared types for chore management
 // Can be reused in React Native mobile app
 
+import {
+  RecurrenceType,
+  RecurrencePattern,
+} from "./recurring";
+
 export type ChoreDifficulty = "easy" | "medium" | "hard";
 export type ChoreStatus = "pending" | "completed" | "archived";
 
@@ -34,6 +39,14 @@ export interface Chore {
     id: string;
     displayName: string;
     avatarUrl: string | null;
+  } | null;
+  // Recurring data
+  recurring?: {
+    id: string;
+    recurrenceType: RecurrenceType;
+    recurrencePattern: RecurrencePattern;
+    nextDueDate: string;
+    active: boolean;
   } | null;
 }
 

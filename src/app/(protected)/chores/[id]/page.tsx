@@ -14,6 +14,8 @@ import {
   Trash2,
   Undo2,
   User,
+  Repeat,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +40,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useHousehold } from "@/components/household/household-provider";
 import { Chore, DIFFICULTY_LABELS, STATUS_LABELS } from "@/types/chore";
@@ -46,6 +54,12 @@ import {
   isChoreOverdue,
   isUndoAvailable,
 } from "@/lib/validations/chore";
+import { formatRecurrencePattern } from "@/lib/validations/recurring";
+import { CalendarPreview } from "@/components/recurring/calendar-preview";
+import {
+  RecurringChoreDialog,
+  RecurringBadge,
+} from "@/components/recurring";
 
 export default function ChoreDetailPage() {
   const params = useParams();
@@ -271,13 +285,41 @@ export default function ChoreDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">{chore.title}</h1>
-              <div className="flex gap-2 mt-1">
+              <div className="flex flex-wrap gap-2 mt-1">
                 <Badge variant="secondary" className={getStatusColor(chore.status)}>
                   {STATUS_LABELS[chore.status]}
                 </Badge>
                 <Badge variant="outline" className={getDifficultyColor(chore.difficulty)}>
                   {DIFFICULTY_LABELS[chore.difficulty]}
                 </Badge>
+                {chore.recurring?.active && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge
+                          variant="outline"
+                          className="gap-1 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                        >
+                          <Repeat className="w-3 h-3" />
+                          <span className="hidden sm:inline">
+                            {formatRecurrencePattern(
+                              chore.recurring.recurrenceType,
+                              chore.recurring.recurrencePattern as unknown as Record<string, unknown>
+                            )}
+                          </span>
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {formatRecurrencePattern(
+                            chore.recurring.recurrenceType,
+                            chore.recurring.recurrencePattern as unknown as Record<string, unknown>
+                          )}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
             </div>
             <DropdownMenu>
@@ -388,6 +430,118 @@ export default function ChoreDetailPage() {
                     {formatDueDate(chore.dueDate)}
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Recurrence Section */}
+            <Separator />
+            <div className="flex items-center gap-3">
+              <Repeat className={`w-5 h-5 ${chore.recurring?.active ? "text-purple-500" : "text-muted-foreground"}`} />
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Wiederholung
+                </h3>
+                {chore.recurring?.active ? (
+                  <div className="mt-1">
+                    <p className="font-medium">
+                      {formatRecurrencePattern(
+                        chore.recurring.recurrenceType,
+                        chore.recurring.recurrencePattern as unknown as Record<string, unknown>
+                      )}
+                    </p>
+                    {chore.recurring.nextDueDate && (
+                      <p className="text-sm text-muted-foreground">
+                        Nachste Falligkeit:{" "}
+                        {new Date(chore.recurring.nextDueDate).toLocaleDateString("de-DE", {
+                          weekday: "long",
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">Keine Wiederholung</p>
+                )}
+              </div>
+            </div>
+
+            {/* Recurrence Setup/Edit Button */}
+            {chore.status !== "completed" && (
+              <div className="pt-2">
+                <RecurringChoreDialog
+                  choreId={chore.id}
+                  existingRecurring={chore.recurring ? {
+                    id: chore.recurring.id,
+                    householdId: chore.householdId,
+                    choreId: chore.id,
+                    recurrenceType: chore.recurring.recurrenceType,
+                    recurrencePattern: chore.recurring.recurrencePattern,
+                    startDate: chore.createdAt,
+                    endDate: null,
+                    nextDueDate: chore.recurring.nextDueDate,
+                    active: chore.recurring.active,
+                    createdBy: chore.createdBy,
+                    createdAt: chore.createdAt,
+                    updatedAt: chore.createdAt,
+                  } : null}
+                  onCreate={async (data) => {
+                    const response = await fetch(`/api/chores/${chore.id}/recurring`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(data),
+                    });
+                    if (!response.ok) {
+                      const errorData = await response.json();
+                      throw new Error(errorData.error || "Fehler beim Erstellen der Wiederholung");
+                    }
+                    // Refresh chore data
+                    const refreshResponse = await fetch(`/api/chores/${choreId}`);
+                    const refreshData = await refreshResponse.json();
+                    if (refreshResponse.ok) {
+                      setChore(refreshData.chore);
+                    }
+                  }}
+                  onUpdate={async (data) => {
+                    const response = await fetch(`/api/chores/${chore.id}/recurring`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(data),
+                    });
+                    if (!response.ok) {
+                      const errorData = await response.json();
+                      throw new Error(errorData.error || "Fehler beim Aktualisieren der Wiederholung");
+                    }
+                    // Refresh chore data
+                    const refreshResponse = await fetch(`/api/chores/${choreId}`);
+                    const refreshData = await refreshResponse.json();
+                    if (refreshResponse.ok) {
+                      setChore(refreshData.chore);
+                    }
+                  }}
+                  onStop={async () => {
+                    const response = await fetch(`/api/chores/${chore.id}/recurring`, {
+                      method: "DELETE",
+                    });
+                    if (!response.ok) {
+                      const errorData = await response.json();
+                      throw new Error(errorData.error || "Fehler beim Stoppen der Wiederholung");
+                    }
+                    // Refresh chore data
+                    const refreshResponse = await fetch(`/api/chores/${choreId}`);
+                    const refreshData = await refreshResponse.json();
+                    if (refreshResponse.ok) {
+                      setChore(refreshData.chore);
+                    }
+                  }}
+                  trigger={
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Repeat className="w-4 h-4" />
+                      {chore.recurring?.active ? "Wiederholung bearbeiten" : "Wiederholung einrichten"}
+                    </Button>
+                  }
+                />
               </div>
             )}
 

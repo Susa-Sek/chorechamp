@@ -1,0 +1,44 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e7]
+      - generic [ref=e10]: Konto erstellen
+      - generic [ref=e11]: Werde Teil deines Haushalts und sammle Punkte!
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - text: Anzeigename
+        - generic [ref=e15]:
+          - img [ref=e16]
+          - textbox "Dein Name" [ref=e19]
+      - generic [ref=e20]:
+        - text: E-Mail
+        - generic [ref=e21]:
+          - img [ref=e22]
+          - textbox "deine@email.de" [ref=e25]
+      - generic [ref=e26]:
+        - text: Passwort
+        - generic [ref=e27]:
+          - img [ref=e28]
+          - textbox "••••••••" [ref=e31]
+          - button [ref=e32] [cursor=pointer]:
+            - img [ref=e33]
+      - generic [ref=e36]:
+        - text: Passwort bestätigen
+        - generic [ref=e37]:
+          - img [ref=e38]
+          - textbox "••••••••" [ref=e41]
+          - button [ref=e42] [cursor=pointer]:
+            - img [ref=e43]
+      - button "Konto erstellen" [ref=e46] [cursor=pointer]
+    - paragraph [ref=e48]:
+      - text: Bereits ein Konto?
+      - link "Anmelden" [ref=e49] [cursor=pointer]:
+        - /url: /auth/login
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e55] [cursor=pointer]:
+    - img [ref=e56]
+  - alert [ref=e59]
+```
