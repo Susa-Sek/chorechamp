@@ -6,6 +6,73 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+// Helper function to award points for chore completion
+async function awardChoreCompletionPoints(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  choreId: string,
+  choreTitle: string,
+  points: number
+): Promise<{ success: boolean; streakBonus: number; newBalance: number }> {
+  // Award points using RPC function
+  const { data: result, error: pointsError } = await supabase.rpc(
+    "add_points_to_user",
+    {
+      p_user_id: userId,
+      p_points: points,
+      p_transaction_type: "chore_completion",
+      p_reference_id: choreId,
+      p_description: `Aufgabe erledigt: ${choreTitle}`,
+      p_created_by: userId,
+    }
+  );
+
+  if (pointsError) {
+    console.error("Error awarding points:", pointsError);
+    return { success: false, streakBonus: 0, newBalance: 0 };
+  }
+
+  const parsedResult = result as {
+    success: boolean;
+    new_balance?: number;
+    error?: string;
+  };
+
+  // Update streak and check for streak bonus
+  const { data: streakResult, error: streakError } = await supabase.rpc(
+    "update_user_streak",
+    { p_user_id: userId }
+  );
+
+  let streakBonus = 0;
+  if (!streakError && streakResult) {
+    const parsedStreak = streakResult as {
+      success: boolean;
+      bonus?: number;
+      streak?: number;
+    };
+    streakBonus = parsedStreak.bonus || 0;
+
+    // Award streak bonus if applicable
+    if (streakBonus > 0) {
+      await supabase.rpc("add_points_to_user", {
+        p_user_id: userId,
+        p_points: streakBonus,
+        p_transaction_type: "streak_bonus",
+        p_reference_id: null,
+        p_description: `Streak-Bonus (${parsedStreak.streak} Tage)`,
+        p_created_by: userId,
+      });
+    }
+  }
+
+  return {
+    success: parsedResult.success,
+    streakBonus,
+    newBalance: parsedResult.new_balance || 0,
+  };
+}
+
 // POST /api/chores/[id]/complete - Mark chore as complete
 export async function POST(request: Request, { params }: RouteParams) {
   try {
@@ -118,19 +185,27 @@ export async function POST(request: Request, { params }: RouteParams) {
           points_awarded: chore.points,
         });
 
-        // Update points (ignore errors if RPC not available)
-        const { error: pointsError } = await supabase.rpc("add_points_to_user", {
-          user_id: user.id,
-          points_to_add: chore.points,
-        });
-        if (pointsError) {
-          console.log("Note: Points RPC not available:", pointsError.message);
+        // Award points
+        const pointsResult = await awardChoreCompletionPoints(
+          supabase,
+          user.id,
+          id,
+          chore.title,
+          chore.points
+        );
+
+        const totalPoints = chore.points + pointsResult.streakBonus;
+        let message = `${totalPoints} Punkte verdient!`;
+        if (pointsResult.streakBonus > 0) {
+          message = `${chore.points} Punkte + ${pointsResult.streakBonus} Streak-Bonus!`;
         }
 
         return NextResponse.json({
           success: true,
           pointsEarned: chore.points,
-          message: `${chore.points} Punkte verdient!`,
+          streakBonus: pointsResult.streakBonus,
+          totalPointsEarned: totalPoints,
+          message,
         });
       }
     }
@@ -176,19 +251,27 @@ export async function POST(request: Request, { params }: RouteParams) {
           points_awarded: chore.points,
         });
 
-        // Update points (ignore errors if RPC not available)
-        const { error: pointsError } = await supabase.rpc("add_points_to_user", {
-          user_id: user.id,
-          points_to_add: chore.points,
-        });
-        if (pointsError) {
-          console.log("Note: Points RPC not available:", pointsError.message);
+        // Award points
+        const pointsResult = await awardChoreCompletionPoints(
+          supabase,
+          user.id,
+          id,
+          chore.title,
+          chore.points
+        );
+
+        const totalPoints = chore.points + pointsResult.streakBonus;
+        let message = `${totalPoints} Punkte verdient!`;
+        if (pointsResult.streakBonus > 0) {
+          message = `${chore.points} Punkte + ${pointsResult.streakBonus} Streak-Bonus!`;
         }
 
         return NextResponse.json({
           success: true,
           pointsEarned: chore.points,
-          message: `${chore.points} Punkte verdient!`,
+          streakBonus: pointsResult.streakBonus,
+          totalPointsEarned: totalPoints,
+          message,
         });
       }
 
@@ -260,27 +343,31 @@ export async function POST(request: Request, { params }: RouteParams) {
       // Don't fail the request, just log the error
     }
 
-    // Update user's points (add to their profile)
-    // This could be done via a database trigger, but we'll do it here for clarity
-    const { error: pointsError } = await supabase.rpc("add_points_to_user", {
-      user_id: user.id,
-      points_to_add: chore.points,
-    });
+    // Award points
+    const pointsResult = await awardChoreCompletionPoints(
+      supabase,
+      user.id,
+      id,
+      chore.title,
+      chore.points
+    );
 
-    // If the RPC doesn't exist, we'll just log the error
-    // The points system will be properly implemented in PROJ-5
-    if (pointsError) {
-      console.log(
-        "Note: Points RPC not available. Points will be tracked in PROJ-5"
-      );
+    const totalPoints = chore.points + pointsResult.streakBonus;
+    let message = `${totalPoints} Punkte verdient!`;
+    if (pointsResult.streakBonus > 0) {
+      message = `${chore.points} Punkte + ${pointsResult.streakBonus} Streak-Bonus!`;
+    }
+
+    if (nextDueDateResponse) {
+      message = `${message} Naechste Faelligkeit: ${new Date(nextDueDateResponse).toLocaleDateString("de-DE")}`;
     }
 
     return NextResponse.json({
       success: true,
       pointsEarned: chore.points,
-      message: nextDueDateResponse
-        ? `${chore.points} Punkte verdient! Naechste Faelligkeit: ${new Date(nextDueDateResponse).toLocaleDateString("de-DE")}`
-        : `${chore.points} Punkte verdient!`,
+      streakBonus: pointsResult.streakBonus,
+      totalPointsEarned: totalPoints,
+      message,
       isRecurring: isRecurring,
       nextDueDate: nextDueDateResponse,
     });

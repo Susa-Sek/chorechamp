@@ -16,7 +16,7 @@
 | PROJ-2 | Household Management | Deployed | [PROJ-2-household-management.md](./PROJ-2-household-management.md) | 2026-02-23 |
 | PROJ-3 | Chore Management | Deployed | [PROJ-3-chore-management.md](./PROJ-3-chore-management.md) | 2026-02-23 |
 | PROJ-4 | Recurring Tasks | Deployed | [PROJ-4-recurring-tasks.md](./PROJ-4-recurring-tasks.md) | 2026-02-23 |
-| PROJ-5 | Gamification - Points | Planned | [PROJ-5-gamification-points.md](./PROJ-5-gamification-points.md) | 2026-02-23 |
+| PROJ-5 | Gamification - Points | In Progress | [PROJ-5-gamification-points.md](./PROJ-5-gamification-points.md) | 2026-02-23 |
 | PROJ-6 | Gamification - Rewards | Planned | [PROJ-6-gamification-rewards.md](./PROJ-6-gamification-rewards.md) | 2026-02-23 |
 | PROJ-7 | Gamification - Levels & Badges | Planned | [PROJ-7-gamification-levels-badges.md](./PROJ-7-gamification-levels-badges.md) | 2026-02-23 |
 
