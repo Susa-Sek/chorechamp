@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sparkles, User, Mail, Save, ArrowLeft, LogOut } from "lucide-react";
+import { Sparkles, User, Mail, Save, ArrowLeft, LogOut, Home, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,10 +24,12 @@ import {
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useHousehold } from "@/components/household/household-provider";
 import { profileSchema, ProfileFormData } from "@/lib/validations/auth";
 
 export default function ProfilePage() {
   const { user, profile, updateProfile, signOut } = useAuth();
+  const { household, isAdmin } = useHousehold();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -128,6 +130,55 @@ export default function ProfilePage() {
               </div>
             </div>
           </CardHeader>
+        </Card>
+
+        {/* Household Section */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Home className="w-5 h-5" />
+              Haushalt
+            </CardTitle>
+            <CardDescription>
+              Dein aktueller Haushalt
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {household ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-medium">{household.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {isAdmin ? "Admin" : "Mitglied"}
+                    </div>
+                  </div>
+                </div>
+                <Link href="/household">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    Verwalten
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-muted-foreground mb-3">
+                  Du bist noch keinem Haushalt beigetreten
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Link href="/household/create">
+                    <Button size="sm">Erstellen</Button>
+                  </Link>
+                  <Link href="/household/join">
+                    <Button variant="outline" size="sm">Beitreten</Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         {/* Edit Profile Form */}
