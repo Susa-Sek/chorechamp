@@ -112,37 +112,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      return { error: getErrorMessage(error) };
+      if (error) {
+        return { error: getErrorMessage(error) };
+      }
+
+      return { error: null };
+    } catch (err) {
+      console.error("Sign in error:", err);
+      if (isNetworkError(err)) {
+        return { error: "Netzwerkfehler - Bitte überprüfe deine Internetverbindung" };
+      }
+      return { error: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut." };
     }
-
-    return { error: null };
   };
 
   const signUp = async (email: string, password: string, displayName: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          display_name: displayName,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            display_name: displayName,
+          },
+          // Redirect to callback route for email confirmation (if enabled)
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-        // Redirect to callback route for email confirmation (if enabled)
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+      });
 
-    if (error) {
-      return { error: getErrorMessage(error) };
+      if (error) {
+        return { error: getErrorMessage(error) };
+      }
+
+      // If no session returned, try to sign in directly
+      // (This happens when email confirmation is disabled but signUp doesn't auto-login)
+      if (!data.session) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (signInError) {
+          // User created but can't auto-login - they'll need to login manually
+          console.error("Auto-login after signup failed:", signInError);
+        }
+      }
+
+      // Profile is created automatically by the database trigger
+      return { error: null };
+    } catch (err) {
+      console.error("Sign up error:", err);
+      if (isNetworkError(err)) {
+        return { error: "Netzwerkfehler - Bitte überprüfe deine Internetverbindung" };
+      }
+      return { error: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut." };
     }
-
-    // Profile is created automatically by the database trigger
-    return { error: null };
   };
 
   const signOut = async () => {
@@ -157,25 +187,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
-    });
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
 
-    if (error) {
-      return { error: getErrorMessage(error) };
+      if (error) {
+        return { error: getErrorMessage(error) };
+      }
+
+      return { error: null };
+    } catch (err) {
+      console.error("Reset password error:", err);
+      if (isNetworkError(err)) {
+        return { error: "Netzwerkfehler - Bitte überprüfe deine Internetverbindung" };
+      }
+      return { error: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut." };
     }
-
-    return { error: null };
   };
 
   const updatePassword = async (password: string) => {
-    const { error } = await supabase.auth.updateUser({ password });
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
 
-    if (error) {
-      return { error: getErrorMessage(error) };
+      if (error) {
+        return { error: getErrorMessage(error) };
+      }
+
+      return { error: null };
+    } catch (err) {
+      console.error("Update password error:", err);
+      if (isNetworkError(err)) {
+        return { error: "Netzwerkfehler - Bitte überprüfe deine Internetverbindung" };
+      }
+      return { error: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut." };
     }
-
-    return { error: null };
   };
 
   const updateProfile = async (displayName: string, avatarUrl?: string) => {
@@ -183,27 +229,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: "Nicht angemeldet" };
     }
 
-    const updateData: { display_name: string; avatar_url?: string } = {
-      display_name: displayName,
-    };
+    try {
+      const updateData: { display_name: string; avatar_url?: string } = {
+        display_name: displayName,
+      };
 
-    if (avatarUrl !== undefined) {
-      updateData.avatar_url = avatarUrl;
+      if (avatarUrl !== undefined) {
+        updateData.avatar_url = avatarUrl;
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updateData)
+        .eq("id", state.user.id);
+
+      if (error) {
+        return { error: "Fehler beim Speichern des Profils" };
+      }
+
+      // Refresh profile
+      await refreshProfile();
+
+      return { error: null };
+    } catch (err) {
+      console.error("Update profile error:", err);
+      if (isNetworkError(err)) {
+        return { error: "Netzwerkfehler - Bitte überprüfe deine Internetverbindung" };
+      }
+      return { error: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut." };
     }
-
-    const { error } = await supabase
-      .from("profiles")
-      .update(updateData)
-      .eq("id", state.user.id);
-
-    if (error) {
-      return { error: "Fehler beim Speichern des Profils" };
-    }
-
-    // Refresh profile
-    await refreshProfile();
-
-    return { error: null };
   };
 
   const refreshProfile = async () => {
@@ -239,6 +293,46 @@ export function useAuth() {
   return context;
 }
 
+// Helper to check if an error is a network error
+function isNetworkError(error: unknown): boolean {
+  if (!error) return false;
+
+  // Check for TypeError (fetch failed)
+  if (error instanceof TypeError) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes("fetch") ||
+      message.includes("network") ||
+      message.includes("failed to fetch") ||
+      message.includes("networkerror") ||
+      message.includes("abort")
+    );
+  }
+
+  // Check for Supabase network errors
+  if (typeof error === "object" && error !== null) {
+    const err = error as { message?: string; status?: number };
+    if (err.message) {
+      const message = err.message.toLowerCase();
+      if (
+        message.includes("network") ||
+        message.includes("failed to fetch") ||
+        message.includes("timeout") ||
+        message.includes("connection refused") ||
+        message.includes("cors")
+      ) {
+        return true;
+      }
+    }
+    // Check for status codes that indicate network issues
+    if (err.status === 0 || err.status === 502 || err.status === 503 || err.status === 504) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // Helper to translate Supabase error messages to German
 function getErrorMessage(error: { message: string }): string {
   const errorMap: Record<string, string> = {
@@ -248,6 +342,9 @@ function getErrorMessage(error: { message: string }): string {
     "Password should be at least 6 characters": "Passwort muss mindestens 6 Zeichen haben",
     "Unable to validate email address: invalid format": "Ungültiges E-Mail-Format",
     "Signups not allowed": "Registrierung nicht erlaubt",
+    "Network request failed": "Netzwerkfehler - Bitte überprüfe deine Internetverbindung",
+    "Failed to fetch": "Netzwerkfehler - Bitte überprüfe deine Internetverbindung",
+    "Timeout": "Zeitüberschreitung - Bitte versuche es erneut",
   };
 
   return errorMap[error.message] || error.message;

@@ -166,6 +166,18 @@ export async function GET(request: Request, { params }: RouteParams) {
               avatarUrl: typedChore.completer.avatar_url,
             }
           : null,
+        recurring: typedChore.recurring && typedChore.recurring.length > 0
+          ? (() => {
+              const r = typedChore.recurring[0];
+              return r ? {
+                id: r.id,
+                recurrenceType: r.recurrence_type,
+                recurrencePattern: r.recurrence_pattern,
+                nextDueDate: r.next_due_date,
+                active: r.active,
+              } : null;
+            })()
+          : null,
       },
     });
   } catch (error) {
