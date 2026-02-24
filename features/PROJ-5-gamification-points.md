@@ -1,6 +1,6 @@
 # PROJ-5: Gamification - Points System
 
-> Status: In Progress
+> Status: Deployed
 > Created: 2026-02-23
 > Updated: 2026-02-24
 > Dependencies: PROJ-2 (Household Management), PROJ-3 (Chore Management)
