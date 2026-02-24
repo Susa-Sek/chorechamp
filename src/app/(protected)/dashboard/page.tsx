@@ -155,50 +155,107 @@ export default function DashboardPage() {
           </Card>
         )}
 
-        {/* Coming Soon */}
-        <div className="mt-8 grid md:grid-cols-3 gap-4">
-          <Card className="opacity-60">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-muted-foreground" />
-                <CardTitle className="text-lg">Meine Aufgaben</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Bald verfügbar: Deine zugewiesenen Aufgaben im Überblick.
-              </p>
-            </CardContent>
-          </Card>
+        {/* Quick Actions */}
+        {household && (
+          <div className="mt-8 grid md:grid-cols-3 gap-4">
+            <Link href="/chores" className="group">
+              <Card className="h-full transition-all hover:shadow-md hover:border-primary/50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-primary" />
+                    </div>
+                    <CardTitle className="text-lg">Meine Aufgaben</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Verwalte und erledige deine Haushaltsaufgaben.
+                  </p>
+                  <div className="mt-3 flex items-center text-sm text-primary">
+                    Zur Aufgabenliste
+                    <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <Card className="opacity-60">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Trophy className="w-5 h-5 text-muted-foreground" />
-                <CardTitle className="text-lg">Leaderboard</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Bald verfügbar: Vergleiche deine Punkte mit anderen.
-              </p>
-            </CardContent>
-          </Card>
+            <Card className="opacity-60">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-5 h-5 text-muted-foreground" />
+                  <CardTitle className="text-lg">Leaderboard</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Bald verfugbar: Vergleiche deine Punkte mit anderen.
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card className="opacity-60">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-muted-foreground" />
-                <CardTitle className="text-lg">Belohnungen</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Bald verfügbar: Löse deine Punkte gegen Belohnungen ein.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            <Card className="opacity-60">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-muted-foreground" />
+                  <CardTitle className="text-lg">Belohnungen</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Bald verfugbar: Lose deine Punkte gegen Belohnungen ein.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Coming Soon for users without household */}
+        {!household && !isHouseholdLoading && (
+          <div className="mt-8 grid md:grid-cols-3 gap-4">
+            <Card className="opacity-60">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-muted-foreground" />
+                  <CardTitle className="text-lg">Meine Aufgaben</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Erstelle oder trete einem Haushalt bei, um Aufgaben zu verwalten.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="opacity-60">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Trophy className="w-5 h-5 text-muted-foreground" />
+                  <CardTitle className="text-lg">Leaderboard</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Bald verfugbar: Vergleiche deine Punkte mit anderen.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="opacity-60">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-muted-foreground" />
+                  <CardTitle className="text-lg">Belohnungen</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Bald verfugbar: Lose deine Punkte gegen Belohnungen ein.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </main>
     </div>
   );
