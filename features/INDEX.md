@@ -12,7 +12,7 @@
 
 | ID | Feature | Status | Spec | Created |
 |----|---------|--------|------|---------|
-| PROJ-1 | User Authentication | In Review | [PROJ-1-user-authentication.md](./PROJ-1-user-authentication.md) | 2026-02-23 |
+| PROJ-1 | User Authentication | Deployed | [PROJ-1-user-authentication.md](./PROJ-1-user-authentication.md) | 2026-02-23 |
 | PROJ-2 | Household Management | Planned | [PROJ-2-household-management.md](./PROJ-2-household-management.md) | 2026-02-23 |
 | PROJ-3 | Chore Management | Planned | [PROJ-3-chore-management.md](./PROJ-3-chore-management.md) | 2026-02-23 |
 | PROJ-4 | Recurring Tasks | Planned | [PROJ-4-recurring-tasks.md](./PROJ-4-recurring-tasks.md) | 2026-02-23 |

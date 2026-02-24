@@ -1,9 +1,10 @@
 # PROJ-1: User Authentication
 
-> Status: Ready for Deployment
+> Status: Deployed
 > Created: 2026-02-23
 > Updated: 2026-02-24
 > Dependencies: None
+> Deployment: https://chorechamp-phi.vercel.app (2026-02-24)
 
 ## Overview
 Enable users to create accounts and authenticate securely to access their household data.
