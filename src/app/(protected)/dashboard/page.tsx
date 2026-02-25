@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Sparkles, Trophy, Users, CheckCircle, ArrowRight, Settings, Home } from "lucide-react";
+import { Sparkles, Trophy, Users, CheckCircle, ArrowRight, Settings, Home, BarChart3, Flame, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,10 +13,30 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useHousehold } from "@/components/household/household-provider";
+import { usePoints } from "@/components/points/points-provider";
+import { PointBalance } from "@/components/points/point-balance";
+import { Leaderboard } from "@/components/points/leaderboard";
+import { UserStatistics } from "@/types/points";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
   const { profile } = useAuth();
   const { household, isLoading: isHouseholdLoading } = useHousehold();
+  const { balance, streak, fetchStatistics } = usePoints();
+  const [statistics, setStatistics] = useState<UserStatistics | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      if (household) {
+        setIsStatsLoading(true);
+        const stats = await fetchStatistics();
+        setStatistics(stats);
+        setIsStatsLoading(false);
+      }
+    };
+    loadStats();
+  }, [fetchStatistics, household]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
@@ -41,6 +62,7 @@ export default function DashboardPage() {
                 </Button>
               </Link>
             )}
+            <PointBalance size="sm" />
             <Link href="/profile">
               <Button variant="ghost" className="gap-2">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-medium">
@@ -58,37 +80,93 @@ export default function DashboardPage() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
-            Willkommen zurück, {profile?.displayName || "Champ"}!
+            Willkommen zuruck, {profile?.displayName || "Champ"}!
           </h1>
           <p className="text-muted-foreground">
-            Hier ist deine Übersicht für heute.
+            Hier ist deine Ubersicht fur heute.
           </p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-primary">0</div>
-              <div className="text-sm text-muted-foreground">Punkte</div>
-            </CardContent>
+          {/* Points Card */}
+          <Card className="hover:shadow-md transition-shadow">
+            <Link href="/points/history">
+              <CardContent className="pt-6">
+                {isStatsLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-yellow-500" />
+                      <div className="text-2xl font-bold text-primary tabular-nums">
+                        {(balance?.currentBalance || 0).toLocaleString("de-DE")}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Punkte</div>
+                  </>
+                )}
+              </CardContent>
+            </Link>
           </Card>
-          <Card>
+
+          {/* Level Card - Placeholder for PROJ-7 */}
+          <Card className="hover:shadow-md transition-shadow opacity-60">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold">Level 1</div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-500" />
+                <div className="text-2xl font-bold">Level 1</div>
+              </div>
               <div className="text-sm text-muted-foreground">Newcomer</div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold">0</div>
-              <div className="text-sm text-muted-foreground">Aufgaben heute</div>
-            </CardContent>
+
+          {/* Chores Today Card */}
+          <Card className="hover:shadow-md transition-shadow">
+            <Link href="/chores">
+              <CardContent className="pt-6">
+                {isStatsLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-6 w-8" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <div className="text-2xl font-bold">
+                        {statistics?.choresCompletedThisWeek || 0}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Aufgaben diese Woche</div>
+                  </>
+                )}
+              </CardContent>
+            </Link>
           </Card>
-          <Card>
+
+          {/* Streak Card */}
+          <Card className="hover:shadow-md transition-shadow">
             <CardContent className="pt-6">
-              <div className="text-2xl font-bold">0</div>
-              <div className="text-sm text-muted-foreground">Tage Streak</div>
+              {isStatsLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-8" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Flame className="w-5 h-5 text-orange-500" />
+                    <div className="text-2xl font-bold">
+                      {statistics?.currentStreak || streak?.currentStreak || 0}
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">Tage Streak</div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -157,7 +235,7 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         {household && (
-          <div className="mt-8 grid md:grid-cols-3 gap-4">
+          <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/chores" className="group">
               <Card className="h-full transition-all hover:shadow-md hover:border-primary/50">
                 <CardHeader>
@@ -180,39 +258,77 @@ export default function DashboardPage() {
               </Card>
             </Link>
 
-            <Card className="opacity-60">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <Trophy className="w-5 h-5 text-muted-foreground" />
-                  <CardTitle className="text-lg">Leaderboard</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Bald verfugbar: Vergleiche deine Punkte mit anderen.
-                </p>
-              </CardContent>
-            </Card>
+            <Link href="/rewards" className="group">
+              <Card className="h-full transition-all hover:shadow-md hover:border-primary/50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                      <Gift className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <CardTitle className="text-lg">Belohnungen</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Loese deine Punkte gegen Belohnungen ein.
+                  </p>
+                  <div className="mt-3 flex items-center text-sm text-primary">
+                    Zu den Belohnungen
+                    <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card className="opacity-60">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-muted-foreground" />
-                  <CardTitle className="text-lg">Belohnungen</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Bald verfugbar: Lose deine Punkte gegen Belohnungen ein.
-                </p>
-              </CardContent>
-            </Card>
+            <Link href="/statistics" className="group">
+              <Card className="h-full transition-all hover:shadow-md hover:border-primary/50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                      <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    <CardTitle className="text-lg">Leaderboard</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Vergleiche deine Punkte mit anderen Mitgliedern.
+                  </p>
+                  <div className="mt-3 flex items-center text-sm text-primary">
+                    Zum Leaderboard
+                    <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/statistics" className="group">
+              <Card className="h-full transition-all hover:shadow-md hover:border-primary/50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <CardTitle className="text-lg">Statistiken</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Sieh dir deine Aktivitaten und Fortschritte an.
+                  </p>
+                  <div className="mt-3 flex items-center text-sm text-primary">
+                    Zu den Statistiken
+                    <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         )}
 
         {/* Coming Soon for users without household */}
         {!household && !isHouseholdLoading && (
-          <div className="mt-8 grid md:grid-cols-3 gap-4">
+          <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="opacity-60">
               <CardHeader>
                 <div className="flex items-center gap-3">
@@ -230,6 +346,20 @@ export default function DashboardPage() {
             <Card className="opacity-60">
               <CardHeader>
                 <div className="flex items-center gap-3">
+                  <Gift className="w-5 h-5 text-muted-foreground" />
+                  <CardTitle className="text-lg">Belohnungen</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Bald verfugbar: Loese Punkte gegen Belohnungen ein.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="opacity-60">
+              <CardHeader>
+                <div className="flex items-center gap-3">
                   <Trophy className="w-5 h-5 text-muted-foreground" />
                   <CardTitle className="text-lg">Leaderboard</CardTitle>
                 </div>
@@ -244,16 +374,27 @@ export default function DashboardPage() {
             <Card className="opacity-60">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <Sparkles className="w-5 h-5 text-muted-foreground" />
-                  <CardTitle className="text-lg">Belohnungen</CardTitle>
+                  <BarChart3 className="w-5 h-5 text-muted-foreground" />
+                  <CardTitle className="text-lg">Statistiken</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Bald verfugbar: Lose deine Punkte gegen Belohnungen ein.
+                  Bald verfugbar: Sieh dir deine Aktivitaten an.
                 </p>
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* Mini Leaderboard for household members */}
+        {household && (
+          <div className="mt-8">
+            <Leaderboard
+              title="Punkte-Rangliste"
+              description="Deine Position im Haushalt"
+              className="mb-8"
+            />
           </div>
         )}
       </main>

@@ -15,6 +15,8 @@ import {
   Clock,
   MoreVertical,
   Loader2,
+  Gift,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +64,9 @@ import {
 import { useHousehold } from "@/components/household/household-provider";
 import { useAuth } from "@/components/auth/auth-provider";
 import { formatExpirationDate } from "@/lib/validations/household";
+import { Leaderboard } from "@/components/points";
+import { BonusPointsDialog } from "@/components/points/bonus-points-dialog";
+import { PointBalanceCompact } from "@/components/points/point-balance";
 
 export default function HouseholdPage() {
   const { profile, user } = useAuth();
@@ -83,6 +88,7 @@ export default function HouseholdPage() {
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [showBonusDialog, setShowBonusDialog] = useState(false);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [selectedNewAdmin, setSelectedNewAdmin] = useState<string | null>(null);
   const [inviteExpiresIn, setInviteExpiresIn] = useState("7");
@@ -283,12 +289,15 @@ export default function HouseholdPage() {
             <span className="text-xl font-bold">ChoreChamp</span>
           </Link>
 
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Zurück
-            </Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            <PointBalanceCompact />
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Zuruck
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -391,12 +400,21 @@ export default function HouseholdPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             onClick={() => {
+                              setSelectedMember(member.userId);
+                              setShowBonusDialog(true);
+                            }}
+                          >
+                            <Gift className="w-4 h-4 mr-2" />
+                            Bonuspunkte
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
                               setSelectedMember(member.id);
                               setShowTransferDialog(true);
                             }}
                           >
                             <Crown className="w-4 h-4 mr-2" />
-                            Admin übertragen
+                            Admin ubertragen
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive"
@@ -501,6 +519,61 @@ export default function HouseholdPage() {
             </Card>
           )}
         </div>
+
+        {/* Leaderboard Section */}
+        <div className="mt-6">
+          <Leaderboard
+            title="Punkte-Rangliste"
+            description="Vergleiche deine Punkte mit anderen Mitgliedern"
+          />
+        </div>
+
+        {/* Bonus Points Button for Admins */}
+        {isAdmin && (
+          <Card className="mt-6 border-primary/30">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Gift className="w-5 h-5 text-primary" />
+                Bonuspunkte vergeben
+              </CardTitle>
+              <CardDescription>
+                Belohne Mitglieder fur besondere Leistungen mit zusatzlichen Punkten
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                className="gap-2"
+                onClick={() => setShowBonusDialog(true)}
+              >
+                <Gift className="w-4 h-4" />
+                Bonuspunkte vergeben
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Redemptions Management for Admins */}
+        {isAdmin && (
+          <Card className="mt-6 border-yellow-200 dark:border-yellow-800">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Gift className="w-5 h-5 text-yellow-600" />
+                Einloesungen verwalten
+              </CardTitle>
+              <CardDescription>
+                Sieh und verwalte alle eingeloeesten Belohnungen deiner Mitglieder
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/household/redemptions">
+                <Button variant="outline" className="gap-2">
+                  <Gift className="w-4 h-4" />
+                  Einloesungen anzeigen
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Leave Household Section */}
         <Card className="mt-6 border-destructive/50">
@@ -659,7 +732,7 @@ export default function HouseholdPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Mitglied entfernen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bist du sicher, dass du dieses Mitglied aus dem Haushalt entfernen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
+              Bist du sicher, dass du dieses Mitglied aus dem Haushalt entfernen mochtest? Diese Aktion kann nicht ruckgangig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -681,6 +754,12 @@ export default function HouseholdPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bonus Points Dialog */}
+      <BonusPointsDialog
+        open={showBonusDialog}
+        onOpenChange={setShowBonusDialog}
+      />
     </div>
   );
 }
