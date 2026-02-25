@@ -19,13 +19,15 @@ ChoreChamp ist eine Gamification-Plattform für Haushaltsaufgaben, die Familien 
 
 | Priority | Feature | Status |
 |----------|---------|--------|
-| P0 (MVP) | User Authentication | Planned |
-| P0 (MVP) | Household Management | Planned |
-| P0 (MVP) | Chore Management | Planned |
-| P0 (MVP) | Recurring Tasks | Planned |
-| P0 (MVP) | Basic Gamification (Points) | Planned |
-| P1 | Rewards System | Planned |
-| P1 | Levels & Badges | Planned |
+| P0 (MVP) | User Authentication | Deployed |
+| P0 (MVP) | Household Management | Deployed |
+| P0 (MVP) | Chore Management | Deployed |
+| P0 (MVP) | Recurring Tasks | Deployed |
+| P0 (MVP) | Basic Gamification (Points) | Deployed |
+| P1 | Rewards System | Deployed |
+| P1 | Levels & Badges | Deployed |
+| P0 (MVP) | Database Triggers - User Onboarding | Planned |
+| P0 (MVP) | E2E User Journey Tests | Planned |
 | P2 | Statistics Dashboard | Planned |
 | P2 | Mobile App (React Native) | Planned |
 
