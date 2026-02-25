@@ -53,8 +53,9 @@ export default function LoginPage() {
         return;
       }
 
-      // Use window.location for a full page refresh to ensure session is picked up
-      window.location.href = "/dashboard";
+      // Successful login - redirect immediately
+      // Use replace to avoid back button issues
+      window.location.replace("/dashboard");
     } catch (err) {
       console.error("Login error:", err);
       setError("Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.");
