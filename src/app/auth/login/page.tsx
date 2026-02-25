@@ -53,11 +53,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Small delay to ensure session is stored before redirect
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       // Successful login - redirect to dashboard
-      window.location.replace("/dashboard");
+      window.location.href = "/dashboard";
     } catch (err) {
       console.error("Login error:", err);
       setError("Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.");

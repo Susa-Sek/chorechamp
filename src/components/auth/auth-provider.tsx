@@ -113,13 +113,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
         return { error: getErrorMessage(error) };
+      }
+
+      // Immediately update auth state on successful login
+      // This prevents race condition with onAuthStateChange
+      if (data.session?.user) {
+        const profile = await fetchProfile(data.session.user.id);
+        setState({
+          user: mapUser(data.session.user),
+          profile,
+          isLoading: false,
+          isAuthenticated: true,
+        });
       }
 
       return { error: null };
