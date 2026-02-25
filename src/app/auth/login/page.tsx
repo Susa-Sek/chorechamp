@@ -44,16 +44,22 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
 
-    const { error } = await signIn(data.email, data.password);
+    try {
+      const { error } = await signIn(data.email, data.password);
 
-    if (error) {
-      setError(error);
+      if (error) {
+        setError(error);
+        setIsLoading(false);
+        return;
+      }
+
+      // Use window.location for a full page refresh to ensure session is picked up
+      window.location.href = "/dashboard";
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.");
       setIsLoading(false);
-      return;
     }
-
-    // Use window.location for a full page refresh to ensure session is picked up
-    window.location.href = "/dashboard";
   };
 
   return (

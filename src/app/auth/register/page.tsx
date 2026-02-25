@@ -75,9 +75,11 @@ export default function RegisterPage() {
       return;
     }
 
-    // Redirect to dashboard since email confirmation is disabled for MVP
+    // Small delay to ensure session cookies are set
     // The middleware will handle the session
-    window.location.href = "/dashboard";
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 500);
   };
 
   // Success state removed - user is redirected directly to dashboard

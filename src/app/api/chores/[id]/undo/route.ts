@@ -111,19 +111,23 @@ export async function POST(request: Request, { params }: RouteParams) {
       // Don't fail the request, just log the error
     }
 
-    // Deduct points from the user who completed (if different from current user)
+    // Deduct points from the user who completed the chore
     if (chore.completed_by) {
-      const { error: pointsError } = await supabase.rpc("subtract_points_from_user", {
-        user_id: chore.completed_by,
-        points_to_subtract: chore.points,
-      });
+      const { error: pointsError } = await supabase.rpc(
+        "subtract_points_from_user",
+        {
+          p_user_id: chore.completed_by,
+          p_points: chore.points,
+          p_transaction_type: "undo",
+          p_reference_id: id,
+          p_description: `Rueckgaengig gemacht: ${chore.title}`,
+          p_created_by: user.id,
+        }
+      );
 
-      // If the RPC doesn't exist, we'll just log the error
-      // The points system will be properly implemented in PROJ-5
       if (pointsError) {
-        console.log(
-          "Note: Points RPC not available. Points will be tracked in PROJ-5"
-        );
+        console.error("Error deducting points:", pointsError);
+        // Don't fail the request, but log the error
       }
     }
 
