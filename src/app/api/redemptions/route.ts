@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { redemptionListQuerySchema } from "@/lib/validations/reward";
+import { redemptionListQuerySchema } from "@/lib/validations/rewards";
 
 // Type for redemption data with joins
 interface RedemptionWithDetails {

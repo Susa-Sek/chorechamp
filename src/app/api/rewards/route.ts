@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { createRewardSchema, rewardListQuerySchema } from "@/lib/validations/reward";
+import { createRewardSchema, rewardListQuerySchema } from "@/lib/validations/rewards";
 
 // Type for reward data with joins
 interface RewardWithProfiles {

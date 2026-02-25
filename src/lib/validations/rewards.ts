@@ -64,11 +64,11 @@ export const updateRewardSchema = z.object({
 });
 
 export const fulfillRedemptionSchema = z.object({
-  fulfillmentNotes: z
+  notes: z
     .string()
     .max(500, "Notizen duerfen maximal 500 Zeichen haben")
     .optional()
-    .or(z.literal("")),
+    .nullable(),
 });
 
 export const rewardListFiltersSchema = z.object({
@@ -84,6 +84,19 @@ export const rewardListSortSchema = z.object({
 
 export const redemptionListFiltersSchema = z.object({
   status: z.union([redemptionStatusSchema, z.literal("all")]).optional(),
+});
+
+// API query schemas (aliases for backwards compatibility)
+export const rewardListQuerySchema = z.object({
+  status: z.enum(["draft", "published", "archived", "all"]).default("published"),
+  affordable: z.boolean().optional(),
+  sortBy: z.enum(["point_cost", "name", "newest"]).default("newest"),
+});
+
+export const redemptionListQuerySchema = z.object({
+  status: z.enum(["pending", "fulfilled", "cancelled", "all"]).default("all"),
+  limit: z.number().int().min(1).max(100).default(20),
+  offset: z.number().int().min(0).default(0),
 });
 
 export type CreateRewardFormData = z.infer<typeof createRewardSchema>;

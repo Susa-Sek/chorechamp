@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { updateRewardSchema } from "@/lib/validations/reward";
+import { updateRewardSchema } from "@/lib/validations/rewards";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
