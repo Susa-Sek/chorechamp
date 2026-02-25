@@ -1,6 +1,6 @@
 # PROJ-6: Gamification - Rewards System
 
-> Status: Planned
+> Status: In Progress
 > Created: 2026-02-23
 > Dependencies: PROJ-5 (Gamification - Points)
 
