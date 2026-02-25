@@ -217,6 +217,10 @@ ON CONFLICT (name) DO NOTHING;
 -- Automatically creates point_balances, user_levels, user_streaks on user signup
 -- ============================================================================
 
+-- CRITICAL: Allow NULL household_id for new users without a household
+-- New users start without a household, household_id is set when they join/create one
+ALTER TABLE public.point_balances ALTER COLUMN household_id DROP NOT NULL;
+
 -- Drop existing trigger (we'll recreate it enhanced)
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
@@ -314,7 +318,7 @@ CREATE TRIGGER on_household_member_added
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_household_join();
 
--- Backfill existing users
+-- Backfill existing users (household_id can be NULL for users without a household)
 INSERT INTO public.point_balances (user_id, household_id, current_balance, total_earned, total_spent, updated_at)
 SELECT u.id, hm.household_id, 0, 0, 0, NOW()
 FROM auth.users u

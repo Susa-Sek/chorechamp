@@ -1,6 +1,6 @@
 # PROJ-8: Database Triggers for User Onboarding
 
-> Status: Planned
+> Status: In Review
 > Created: 2026-02-25
 > Updated: 2026-02-25
 > Dependencies: PROJ-1 (User Authentication), PROJ-5 (Gamification - Points), PROJ-7 (Levels & Badges)
@@ -318,3 +318,232 @@ None required - all handled by database triggers
 
 ## UI Components
 None required - automatic backend functionality
+
+---
+
+## QA Test Results
+
+> **Test Date:** 2026-02-25
+> **Tester:** QA Agent (Automated)
+> **Status:** FAILED - Critical Bugs Found
+
+### Test Summary
+
+| Category | Status | Notes |
+|----------|--------|-------|
+| SQL Validation | PASS | SQL syntax is valid |
+| Schema Compatibility | FAIL | Critical schema mismatch found |
+| Trigger Logic | PASS | Logic is correct for intended behavior |
+| RLS Integration | PASS | SECURITY DEFINER bypasses RLS correctly |
+| Idempotency | PASS | ON CONFLICT clauses handle duplicates |
+
+---
+
+### Acceptance Criteria Test Results
+
+#### US-8.1: Automatic Point Balance Creation
+
+| Criterion | Status | Notes |
+|-----------|--------|-------|
+| point_balances record created on signup | **BLOCKED** | Migration will fail due to schema mismatch |
+| Default balance: 0 | PASS | Migration correctly sets 0 |
+| Default total_earned: 0 | PASS | Migration correctly sets 0 |
+| Default total_spent: 0 | PASS | Migration correctly sets 0 |
+| household_id is NULL until user joins | **FAIL** | Schema does not allow NULL |
+| No 406 errors when fetching point balance | BLOCKED | Cannot test until migration runs |
+
+**Result:** FAILED
+
+#### US-8.2: Automatic User Level Creation
+
+| Criterion | Status | Notes |
+|-----------|--------|-------|
+| user_levels record created on signup | PASS | Migration correctly creates record |
+| Default level: 1 | PASS | Migration uses `current_level` = 1 |
+| Default experience_points: 0 | N/A | Schema uses `total_points` instead |
+| Default total_xp_earned: 0 | N/A | Column does not exist in schema |
+| household_id is NULL until user joins | N/A | Column does not exist in schema |
+| No 406 errors when fetching user level | PASS | Record will be created |
+
+**Result:** PARTIAL PASS (Spec has outdated column names)
+
+#### US-8.3: Automatic User Streak Creation
+
+| Criterion | Status | Notes |
+|-----------|--------|-------|
+| user_streaks record created on signup | PASS | Migration correctly creates record |
+| Default current_streak: 0 | PASS | Correctly set |
+| Default longest_streak: 0 | PASS | Correctly set |
+| last_completion_date: NULL | PASS | Correctly set |
+
+**Result:** PASS
+
+#### US-8.4: Profile Auto-Creation Enhancement
+
+| Criterion | Status | Notes |
+|-----------|--------|-------|
+| profiles record created from auth.users metadata | PASS | Uses ON CONFLICT DO NOTHING |
+| display_name from raw_user_meta_data | PASS | Correctly extracted |
+| Fallback to email prefix | PASS | CASE statement handles this |
+| created_at and updated_at set correctly | PASS | NOW() used |
+
+**Result:** PASS
+
+#### US-8.5: Household Member Auto-Creation
+
+| Criterion | Status | Notes |
+|-----------|--------|-------|
+| household_members record created | PASS | Trigger correctly inserts |
+| Role is 'admin' for creator | PASS | Correctly set |
+| joined_at timestamp set correctly | PASS | NOW() used |
+| household_id updated in point_balances | PASS | UPDATE query correct |
+| household_id updated in user_levels | N/A | Column does not exist |
+
+**Result:** PARTIAL PASS
+
+#### US-8.6: Household Join Cascade
+
+| Criterion | Status | Notes |
+|-----------|--------|-------|
+| household_id updated in point_balances | PASS | UPDATE query correct |
+| household_id updated in user_levels | N/A | Column does not exist |
+| household_members record created | N/A | Handled by API, not trigger |
+
+**Result:** PARTIAL PASS
+
+---
+
+### Bugs Found
+
+#### BUG-8.1: CRITICAL - Schema Mismatch for point_balances.household_id
+
+**Severity:** CRITICAL
+**Priority:** P0
+**Status:** OPEN
+
+**Description:**
+The `point_balances` table schema defines `household_id` as `NOT NULL`:
+```sql
+-- From 20260224000007_gamification_points.sql line 13:
+household_id UUID REFERENCES households(id) ON DELETE CASCADE NOT NULL,
+```
+
+However, the migration attempts to insert `NULL` for this column:
+```sql
+-- From 20260225000003_user_onboarding_triggers.sql lines 40-42:
+INSERT INTO public.point_balances (user_id, household_id, current_balance, total_earned, total_spent, updated_at)
+VALUES (NEW.id, NULL, 0, 0, 0, NOW())
+```
+
+**Impact:**
+- Migration will FAIL to execute
+- No point_balances records will be created
+- User onboarding will be broken
+- 406 errors will continue
+
+**Steps to Reproduce:**
+1. Run migration `20260225000003_user_onboarding_triggers.sql`
+2. Register a new user
+3. Observe error: `null value in column "household_id" violates not-null constraint`
+
+**Fix Required:**
+Either:
+1. Modify the `point_balances` table schema to allow NULL for household_id:
+   ```sql
+   ALTER TABLE public.point_balances ALTER COLUMN household_id DROP NOT NULL;
+   ```
+   OR
+2. Create a placeholder household for new users (not recommended)
+
+**Files Affected:**
+- `/root/ai-coding-starter-kit/chorechamp/supabase/migrations/20260225000003_user_onboarding_triggers.sql`
+- `/root/ai-coding-starter-kit/chorechamp/supabase/migrations/20260224000007_gamification_points.sql`
+
+---
+
+#### BUG-8.2: MEDIUM - Feature Spec Has Outdated Column Names
+
+**Severity:** MEDIUM
+**Priority:** P2
+**Status:** OPEN
+
+**Description:**
+The feature spec references column names that do not match the actual schema:
+
+| Spec Column | Actual Column | Table |
+|-------------|---------------|-------|
+| `level` | `current_level` | user_levels |
+| `experience_points` | `total_points` | user_levels |
+| `total_xp_earned` | (does not exist) | user_levels |
+| `household_id` | (does not exist) | user_levels |
+
+**Impact:**
+- Acceptance criteria cannot be verified as written
+- Documentation is misleading
+
+**Fix Required:**
+Update the feature spec to match the actual schema, or update the schema to match the spec.
+
+**Files Affected:**
+- `/root/ai-coding-starter-kit/chorechamp/features/PROJ-8-database-triggers-onboarding.md`
+
+---
+
+#### BUG-8.3: LOW - Missing household_id Column in user_levels
+
+**Severity:** LOW
+**Priority:** P3
+**Status:** OPEN
+
+**Description:**
+The feature spec and acceptance criteria expect `user_levels.household_id` to exist and be updated when a user joins a household. The actual schema does not have this column.
+
+The migration correctly handles this by commenting out the UPDATE statement (lines 88-93).
+
+**Impact:**
+- Levels are not household-specific (may or may not be intended behavior)
+- Acceptance criteria US-8.5 and US-8.6 cannot be fully met
+
+**Recommendation:**
+Decide if levels should be household-specific. If yes, add the column. If no, update the spec.
+
+---
+
+### Security Audit
+
+| Check | Status | Notes |
+|-------|--------|-------|
+| SECURITY DEFINER usage | PASS | Required for trigger to bypass RLS |
+| SQL Injection risk | PASS | No user input in trigger functions |
+| Privilege escalation | PASS | Functions only modify user's own records |
+| RLS bypass verification | PASS | Intentional and documented |
+| Function grants | PASS | Granted to authenticated role |
+
+**Security Assessment:** No security vulnerabilities found. The use of `SECURITY DEFINER` is appropriate for database triggers that need to create records on behalf of users before they have household membership.
+
+---
+
+### Backfill Script Analysis
+
+The backfill script in the migration correctly handles existing users:
+- Uses LEFT JOIN to find users without records
+- Handles household_id from existing memberships
+- Uses ON CONFLICT DO NOTHING equivalent via WHERE clause
+
+**Potential Issue:** The backfill script also attempts to insert NULL for household_id, which will fail for users without a household.
+
+---
+
+### Recommendations
+
+1. **P0 (Blocking):** Fix BUG-8.1 before applying migration - the schema must allow NULL household_id
+2. **P2:** Update feature spec to match actual schema column names
+3. **P3:** Decide on household_id for user_levels table
+
+---
+
+### Test Environment
+
+- **Dev Server:** Running on localhost:3000
+- **Database:** Supabase (remote)
+- **Migration Status:** NOT APPLIED (blocked by schema issue)

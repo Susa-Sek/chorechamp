@@ -5,6 +5,15 @@
 -- ============================================================================
 
 -- ============================================================================
+-- SCHEMA MODIFICATION: Allow NULL household_id for new users
+-- This is required because new users don't have a household yet
+-- ============================================================================
+
+-- Modify point_balances to allow NULL household_id
+-- New users start without a household, household_id is set when they join/create one
+ALTER TABLE public.point_balances ALTER COLUMN household_id DROP NOT NULL;
+
+-- ============================================================================
 -- ENHANCED USER CREATION TRIGGER
 -- ============================================================================
 
@@ -141,13 +150,15 @@ CREATE TRIGGER on_household_member_added
 
 -- ============================================================================
 -- BACKFILL SCRIPT FOR EXISTING USERS
+-- Note: household_id can now be NULL for users without a household
 -- ============================================================================
 
 -- Backfill point_balances for existing users without records
+-- household_id will be NULL for users without a household, updated when they join/create one
 INSERT INTO public.point_balances (user_id, household_id, current_balance, total_earned, total_spent, updated_at)
 SELECT
   u.id,
-  hm.household_id,
+  hm.household_id,  -- Can be NULL if user has no household
   0, 0, 0, NOW()
 FROM auth.users u
 LEFT JOIN public.point_balances pb ON pb.user_id = u.id
