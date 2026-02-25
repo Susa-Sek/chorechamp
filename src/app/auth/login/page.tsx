@@ -53,8 +53,10 @@ export default function LoginPage() {
         return;
       }
 
-      // Successful login - redirect immediately
-      // Use replace to avoid back button issues
+      // Small delay to ensure session is stored before redirect
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Successful login - redirect to dashboard
       window.location.replace("/dashboard");
     } catch (err) {
       console.error("Login error:", err);
