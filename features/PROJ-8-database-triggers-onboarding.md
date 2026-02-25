@@ -1,6 +1,6 @@
 # PROJ-8: Database Triggers for User Onboarding
 
-> Status: In Review - QA Passed, Ready for Deployment
+> Status: Deployed
 > Created: 2026-02-25
 > Updated: 2026-02-25
 > Dependencies: PROJ-1 (User Authentication), PROJ-5 (Gamification - Points), PROJ-7 (Levels & Badges)
