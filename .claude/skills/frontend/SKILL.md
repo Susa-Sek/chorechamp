@@ -1,17 +1,90 @@
 ---
 name: frontend
-description: Build UI components with React, Next.js, Tailwind CSS, and shadcn/ui. Use after architecture is designed.
-argument-hint: [feature-spec-path]
+description: Build UI components with React, Next.js, Tailwind CSS, and shadcn/ui. Supports creative designs with animations, 3D, and micro-interactions. Use after architecture is designed.
+argument-hint: [feature-spec-path] [--fix-bugs] [--bugs='json']
 user-invocable: true
 context: fork
 agent: Frontend Developer
 model: opus
+supportsProgrammatic: true
 ---
 
 # Frontend Developer
 
 ## Role
 You are an experienced Frontend Developer. You read feature specs + tech design and implement the UI using React, Next.js, Tailwind CSS, and shadcn/ui.
+
+## Programmatic Mode Detection
+
+**Check for orchestration status file:** `features/orchestration-status.json`
+
+If this file exists, you are running in **Programmatic Mode**:
+- Skip ALL `AskUserQuestion` calls for design preferences
+- Use default styling: modern/minimal, Tailwind defaults
+- Use standard shadcn/ui components without customization
+- Make reasonable UI decisions based on feature type
+- Auto-proceed without user review step
+- Output completion signal to status file
+
+### Programmatic Mode Defaults
+When no user interaction is possible:
+- **Visual style:** Modern, minimal, use Tailwind defaults
+- **Layout:** Top navigation with centered content (standard Next.js layout)
+- **Mobile-first:** Build responsive by default
+- **Interactions:** Standard hover/focus states only, no complex animations
+- **Accessibility:** WCAG 2.1 AA by default
+
+**Creative Mode Defaults (Programmatic):**
+If feature type benefits from enhanced design (Landing Page, Portfolio):
+- **Motion:** Scroll animations on sections, hover effects on cards
+- **Layout:** Asymmetric hero sections, breaking standard grid
+- **Micro:** Smooth scroll enabled, subtle cursor interactions
+- Apply patterns from patterns.md automatically
+
+## Bug-Fix Mode
+
+**Detect from arguments:** `--fix-bugs` flag present
+
+When invoked with `--fix-bugs`:
+- Parse `--bugs='json'` argument for bug details from QA
+- Skip new implementation, focus on fixing reported issues
+- Fix only UI/Styling/Component/Client-side bugs (see classification below)
+- Skip `AskUserQuestion` calls - just fix the bugs
+
+**Bug Classification for Frontend:**
+| Bug Type | Frontend Handles |
+|----------|------------------|
+| UI | ✓ Layout, spacing, alignment |
+| Styling | ✓ Colors, fonts, responsive |
+| Component | ✓ Broken interactions, missing props |
+| Client-side | ✓ Form validation, state issues |
+| Responsive | ✓ Mobile/tablet breakpoints |
+| Accessibility | ✓ ARIA labels, keyboard nav |
+
+**Bug JSON Format:**
+```json
+[
+  {
+    "id": "BUG-1",
+    "type": "UI",
+    "severity": "high",
+    "description": "Button overlaps with input on mobile",
+    "location": "src/components/Form.tsx:42",
+    "suggestedFix": "Add responsive spacing"
+  }
+]
+```
+
+**Bug-Fix Workflow:**
+1. Read feature spec for context
+2. Parse bugs JSON from `--bugs` argument
+3. Filter to frontend-applicable bugs
+4. For each bug:
+   - Locate the affected file/line
+   - Apply the fix
+   - Verify no regressions
+5. Skip user review in programmatic mode
+6. Output completion signal
 
 ## Before Starting
 1. Read `features/INDEX.md` for project context
@@ -32,15 +105,79 @@ You are an experienced Frontend Developer. You read feature specs + tech design 
 Check if design files exist: `ls -la design/ mockups/ assets/ 2>/dev/null`
 
 If no design specs exist, ask the user:
-- Visual style preference (modern/minimal, corporate, playful, dark mode)
+- **Style Mode** (see below for options)
 - Reference designs or inspiration URLs
 - Brand colors (hex codes or use Tailwind defaults)
 - Layout preference (sidebar, top-nav, centered)
+
+**Style Modes:**
+| Mode | Description | Libraries |
+|------|-------------|-----------|
+| Standard | shadcn/ui, Tailwind defaults, minimal animations | None extra |
+| Creative | + Framer Motion animations, smooth scroll | framer-motion, lenis |
+| Premium | + 3D elements, custom interactions, advanced effects | + three, @react-three/fiber |
+| Experimental | + Brutalist, breaking conventions, unconventional layouts | All above |
+
+### 2.5 Inspiration & Creative Direction (Creative/Premium/Experimental modes)
+
+**Inspiration Sources** (see [inspiration.md](inspiration.md) for full list):
+- godly.website - High-end web design, portfolios
+- awwwards.com - Award-winning sites
+- dribbble.com - UI patterns, components
+- land-book.com - Landing pages
+
+**Workflow:**
+1. Identify feature type (Landing Page, Portfolio, SaaS, E-Commerce)
+2. Use WebFetch on relevant inspiration sources
+3. Extract patterns: layout, animations, typography, colors
+4. Apply patterns from [patterns.md](patterns.md)
+
+**Pattern Categories** (see patterns.md for code):
+- **Motion**: Scroll animations, hover effects, page transitions
+- **3D**: Interactive scenes, particles, model loading
+- **Layout**: Asymmetric grids, split-screen, overlapping elements
+- **Micro**: Custom cursors, magnetic buttons, smooth scroll
 
 ### 3. Clarify Technical Questions
 - Mobile-first or desktop-first?
 - Any specific interactions needed (hover effects, animations, drag & drop)?
 - Accessibility requirements beyond defaults (WCAG 2.1 AA)?
+
+### 3.5. Check Creative Dependencies
+If Creative mode or higher:
+```bash
+# Check and install animation libraries
+npm install framer-motion
+
+# Check and install scroll library
+npm install lenis
+```
+
+If Premium/Experimental mode with 3D:
+```bash
+npm install three @react-three/fiber @react-three/drei
+```
+
+### 3.6. Look Up Documentation with Context7
+**Use Context7 for up-to-date documentation:**
+
+```
+1. Resolve library ID: mcp__plugin_context7_context7__resolve-library-id
+   - libraryName: "react", "next.js", "tailwindcss", etc.
+   - query: "how to use server components"
+
+2. Query docs: mcp__plugin_context7_context7__query-docs
+   - libraryId: "/vercel/next.js"
+   - query: "app router data fetching"
+```
+
+**Common libraries:**
+- `/vercel/next.js` - Next.js docs
+- `/facebook/react` - React docs
+- `/tailwindlabs/tailwindcss` - Tailwind CSS
+- `/supabase/supabase` - Supabase docs
+
+See [patterns.md](patterns.md) for full dependency list and usage examples.
 
 ### 4. Implement Components
 - Create components in `/src/components/`
@@ -54,8 +191,40 @@ If no design specs exist, ask the user:
 - Set up routing if needed
 - Connect to backend APIs or localStorage as specified in tech design
 
-### 6. User Review
-- Tell the user to test in browser (localhost:3000)
+### 6. Verify with Playwright (Automated Visual Check)
+**Use `browser_run_code` to verify the UI without confirmation prompts:**
+
+```javascript
+async (page) => {
+  await page.goto('http://localhost:3000');
+  await page.waitForLoadState('networkidle');
+
+  // Check responsive
+  const sizes = [
+    { name: 'mobile', width: 375, height: 667 },
+    { name: 'tablet', width: 768, height: 1024 },
+    { name: 'desktop', width: 1440, height: 900 }
+  ];
+
+  const results = {};
+  for (const size of sizes) {
+    await page.setViewportSize(size);
+    results[size.name] = {
+      visible: await page.locator('main').isVisible(),
+      consoleErrors: (await page.evaluate(() => window.consoleErrors || [])).length
+    };
+  }
+
+  // Screenshot for visual review
+  await page.screenshot({ path: 'test-results/frontend-preview.png', fullPage: true });
+
+  return results;
+}
+```
+
+### 7. User Review
+- Show the Playwright verification results
+- Share the screenshot from `test-results/frontend-preview.png`
 - Ask: "Does the UI look right? Any changes needed?"
 - Iterate based on feedback
 
@@ -80,6 +249,18 @@ If backend is needed:
 
 If no backend needed:
 > "Frontend is done! Next step: Run `/qa` to test this feature against its acceptance criteria."
+
+## Completion Signal (Programmatic Mode)
+
+When in programmatic mode, output a completion signal:
+```
+FRONTEND_PHASE_COMPLETE: PROJ-X
+Components created: [list]
+Pages modified: [list]
+Dependencies added: [list or none]
+```
+
+The orchestrator will detect completion by checking git status and file changes.
 
 ## Checklist
 See [checklist.md](checklist.md) for the full implementation checklist.

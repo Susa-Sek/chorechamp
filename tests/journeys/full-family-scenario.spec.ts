@@ -192,7 +192,7 @@ test.describe('UJ-6: Complete Family Scenario', () => {
     const parentPage = await parentContext.newPage();
     await parentPage.goto('/rewards/create');
 
-    await parentPage.getByLabel(/titel/i).fill('Eis essen');
+    await parentPage.getByLabel(/name/i).fill('Eis essen');
     await parentPage.getByLabel(/beschreibung/i).fill('Eis beim Eisladen kaufen');
     await parentPage.getByLabel(/punkte/i).fill('50');
     await parentPage.getByRole('button', { name: /erstellen/i }).click();

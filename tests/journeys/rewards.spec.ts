@@ -44,6 +44,15 @@ test.describe('UJ-5: Reward Redemption', () => {
     const user = generateTestUser('parent');
     await registerUser(page, user);
     await createHousehold(page, 'Test Haushalt Rewards');
+
+    // Wait for household to be fully loaded before proceeding
+    // Navigate to household page to ensure household context is set
+    await page.goto('/household');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for the household content to load - more flexible selector
+    await page.waitForSelector('text=/Mitglied|Haushalt|Wird geladen|Kein Haushalt/', { timeout: 15000 });
+    await page.waitForTimeout(1000);
   });
 
   test.describe('UJ-5.1: Browse Rewards', () => {
@@ -90,9 +99,9 @@ test.describe('UJ-5: Reward Redemption', () => {
       await page.goto('/rewards/create');
 
       // Fill in reward details
-      await page.getByLabel(/titel|name/i).fill('Kino');
+      await page.getByLabel(/name/i).fill('Kino');
       await page.getByLabel(/beschreibung/i).fill('Ins Kino gehen');
-      await page.getByLabel(/punkte|kosten/i).fill('100');
+      await page.getByLabel(/punkte/i).fill('100');
 
       await page.getByRole('button', { name: /erstellen|speichern/i }).click();
 
@@ -103,7 +112,7 @@ test.describe('UJ-5: Reward Redemption', () => {
     test('should validate point cost is positive', async ({ page }) => {
       await page.goto('/rewards/create');
 
-      await page.getByLabel(/titel/i).fill('Invalid Reward');
+      await page.getByLabel(/name/i).fill('Invalid Reward');
       await page.getByLabel(/punkte/i).fill('0');
 
       await page.getByRole('button', { name: /erstellen/i }).click();
@@ -132,7 +141,7 @@ test.describe('UJ-5: Reward Redemption', () => {
     test('should redeem affordable reward successfully', async ({ page }) => {
       // First create a reward
       await page.goto('/rewards/create');
-      await page.getByLabel(/titel/i).fill('Eis essen');
+      await page.getByLabel(/name/i).fill('Eis essen');
       await page.getByLabel(/punkte/i).fill('50');
       await page.getByRole('button', { name: /erstellen/i }).click();
       await page.waitForURL(/\/rewards/);
@@ -153,7 +162,7 @@ test.describe('UJ-5: Reward Redemption', () => {
     test('should deduct points after redemption', async ({ page }) => {
       // Create reward
       await page.goto('/rewards/create');
-      await page.getByLabel(/titel/i).fill('Test Deduction');
+      await page.getByLabel(/name/i).fill('Test Deduction');
       await page.getByLabel(/punkte/i).fill('20');
       await page.getByRole('button', { name: /erstellen/i }).click();
       await page.waitForURL(/\/rewards/);
@@ -175,7 +184,7 @@ test.describe('UJ-5: Reward Redemption', () => {
     test('should show redemption confirmation dialog', async ({ page }) => {
       // Create reward
       await page.goto('/rewards/create');
-      await page.getByLabel(/titel/i).fill('Confirm Test');
+      await page.getByLabel(/name/i).fill('Confirm Test');
       await page.getByLabel(/punkte/i).fill('10');
       await page.getByRole('button', { name: /erstellen/i }).click();
       await page.waitForURL(/\/rewards/);
@@ -191,7 +200,7 @@ test.describe('UJ-5: Reward Redemption', () => {
     test('should log redemption transaction', async ({ page }) => {
       // Create and redeem
       await page.goto('/rewards/create');
-      await page.getByLabel(/titel/i).fill('Transaction Test');
+      await page.getByLabel(/name/i).fill('Transaction Test');
       await page.getByLabel(/punkte/i).fill('10');
       await page.getByRole('button', { name: /erstellen/i }).click();
       await page.waitForURL(/\/rewards/);

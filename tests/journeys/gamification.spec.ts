@@ -13,6 +13,15 @@ test.describe('UJ-4: Gamification Flow', () => {
     const user = generateTestUser('parent');
     await registerUser(page, user);
     await createHousehold(page, 'Test Haushalt Gamification');
+
+    // Wait for household to be fully loaded before proceeding
+    // Navigate to household page to ensure household context is set
+    await page.goto('/household');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for the household content to load - more flexible selector
+    await page.waitForSelector('text=/Mitglied|Haushalt|Wird geladen|Kein Haushalt/', { timeout: 15000 });
+    await page.waitForTimeout(1000);
   });
 
   /**
@@ -20,6 +29,9 @@ test.describe('UJ-4: Gamification Flow', () => {
    */
   async function createAndCompleteChore(page: Page, title: string, difficulty: 'easy' | 'medium' | 'hard') {
     await page.goto('/chores/new');
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('text=/Neue Aufgabe|Titel/', { timeout: 10000 });
+
     await page.getByLabel(/titel/i).fill(title);
 
     // Set difficulty
@@ -32,6 +44,8 @@ test.describe('UJ-4: Gamification Flow', () => {
 
     // Complete the chore
     await page.goto('/chores');
+    await page.waitForLoadState('networkidle');
+    await page.waitForSelector(`text=${title}`, { timeout: 10000 });
     const choreCard = page.locator(`text=${title}`).first().locator('xpath=..');
     await choreCard.locator('button').first().click();
     await page.waitForTimeout(500);

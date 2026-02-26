@@ -11,21 +11,21 @@ test.describe('PROJ-1: User Authentication', () => {
     test('should display registration form with all required fields', async ({ page }) => {
       await page.goto('/auth/register');
 
-      // German labels
-      await expect(page.getByLabel(/anzeigename/i)).toBeVisible();
-      await expect(page.getByLabel(/e-mail/i)).toBeVisible();
-      await expect(page.getByLabel(/^passwort/i)).toBeVisible();
-      await expect(page.getByLabel(/passwort bestätigen/i)).toBeVisible();
+      // German labels - exact match for FormLabel components
+      await expect(page.getByLabel('Anzeigename')).toBeVisible();
+      await expect(page.getByLabel('E-Mail')).toBeVisible();
+      await expect(page.getByLabel('Passwort')).toBeVisible();
+      await expect(page.getByLabel('Passwort bestätigen')).toBeVisible();
       await expect(page.getByRole('button', { name: /konto erstellen/i })).toBeVisible();
     });
 
     test('should validate email format', async ({ page }) => {
       await page.goto('/auth/register');
 
-      await page.getByLabel(/anzeigename/i).fill('Test User');
-      await page.getByLabel(/e-mail/i).fill('invalid-email');
-      await page.getByLabel(/^passwort/i).fill('Password123!');
-      await page.getByLabel(/passwort bestätigen/i).fill('Password123!');
+      await page.getByLabel('Anzeigename').fill('Test User');
+      await page.getByLabel('E-Mail').fill('invalid-email');
+      await page.getByLabel('Passwort').first().fill('Password123!');
+      await page.getByLabel('Passwort bestätigen').fill('Password123!');
       await page.getByRole('button', { name: /konto erstellen/i }).click();
 
       // Wait for validation error
@@ -36,10 +36,10 @@ test.describe('PROJ-1: User Authentication', () => {
       await page.goto('/auth/register');
 
       // Test weak password (too short)
-      await page.getByLabel(/anzeigename/i).fill('Test User');
-      await page.getByLabel(/e-mail/i).fill('test@example.com');
-      await page.getByLabel(/^passwort/i).fill('weak');
-      await page.getByLabel(/passwort bestätigen/i).fill('weak');
+      await page.getByLabel('Anzeigename').fill('Test User');
+      await page.getByLabel('E-Mail').fill('test@example.com');
+      await page.getByLabel('Passwort').first().fill('weak');
+      await page.getByLabel('Passwort bestätigen').fill('weak');
       await page.getByRole('button', { name: /konto erstellen/i }).click();
 
       // Should show password requirement error - German text
@@ -49,10 +49,10 @@ test.describe('PROJ-1: User Authentication', () => {
     test('should require password confirmation match', async ({ page }) => {
       await page.goto('/auth/register');
 
-      await page.getByLabel(/anzeigename/i).fill('Test User');
-      await page.getByLabel(/e-mail/i).fill('test@example.com');
-      await page.getByLabel(/^passwort/i).fill('Password123!');
-      await page.getByLabel(/passwort bestätigen/i).fill('DifferentPassword123!');
+      await page.getByLabel('Anzeigename').fill('Test User');
+      await page.getByLabel('E-Mail').fill('test@example.com');
+      await page.getByLabel('Passwort').first().fill('Password123!');
+      await page.getByLabel('Passwort bestätigen').fill('DifferentPassword123!');
       await page.getByRole('button', { name: /konto erstellen/i }).click();
 
       // German: "Passwörter stimmen nicht überein"
@@ -63,15 +63,15 @@ test.describe('PROJ-1: User Authentication', () => {
       await page.goto('/auth/register');
 
       // Weak password - German: "Schwach"
-      await page.getByLabel(/^passwort/i).fill('weak');
+      await page.getByLabel('Passwort').first().fill('weak');
       await expect(page.getByText(/schwach/i)).toBeVisible({ timeout: 5000 });
 
       // Medium password - German: "Mittel"
-      await page.getByLabel(/^passwort/i).fill('Medium123');
+      await page.getByLabel('Passwort').first().fill('Medium123');
       await expect(page.getByText(/mittel/i)).toBeVisible({ timeout: 5000 });
 
       // Strong password - German: "Stark"
-      await page.getByLabel(/^passwort/i).fill('StrongPassword123!');
+      await page.getByLabel('Passwort').first().fill('StrongPassword123!');
       await expect(page.getByText(/stark/i)).toBeVisible({ timeout: 5000 });
     });
   });
@@ -80,8 +80,8 @@ test.describe('PROJ-1: User Authentication', () => {
     test('should display login form with all required fields', async ({ page }) => {
       await page.goto('/auth/login');
 
-      await expect(page.getByLabel(/e-mail/i)).toBeVisible();
-      await expect(page.getByLabel(/passwort/i)).toBeVisible();
+      await expect(page.getByLabel('E-Mail')).toBeVisible();
+      await expect(page.getByLabel('Passwort')).toBeVisible();
       // German: "Anmelden" for login button
       await expect(page.getByRole('button', { name: /anmelden/i })).toBeVisible();
       // German: "Passwort vergessen"
@@ -91,8 +91,8 @@ test.describe('PROJ-1: User Authentication', () => {
     test('should show error for invalid credentials', async ({ page }) => {
       await page.goto('/auth/login');
 
-      await page.getByLabel(/e-mail/i).fill('nonexistent@example.com');
-      await page.getByLabel(/passwort/i).fill('WrongPassword123!');
+      await page.getByLabel('E-Mail').fill('nonexistent@example.com');
+      await page.getByLabel('Passwort').fill('WrongPassword123!');
       await page.getByRole('button', { name: /anmelden/i }).click();
 
       // German: "Ungültige Anmeldedaten"
@@ -102,8 +102,8 @@ test.describe('PROJ-1: User Authentication', () => {
     test('should show loading state during authentication', async ({ page }) => {
       await page.goto('/auth/login');
 
-      await page.getByLabel(/e-mail/i).fill('test@example.com');
-      await page.getByLabel(/passwort/i).fill('Password123!');
+      await page.getByLabel('E-Mail').fill('test@example.com');
+      await page.getByLabel('Passwort').fill('Password123!');
 
       const submitButton = page.getByRole('button', { name: /anmelden/i });
       await submitButton.click();
@@ -130,7 +130,7 @@ test.describe('PROJ-1: User Authentication', () => {
     test('should display forgot password form', async ({ page }) => {
       await page.goto('/auth/forgot-password');
 
-      await expect(page.getByLabel(/e-mail/i)).toBeVisible();
+      await expect(page.getByLabel('E-Mail')).toBeVisible();
       // German: "Senden" or "Zurücksetzen"
       await expect(page.getByRole('button', { name: /senden|zurücksetzen|passwort/i })).toBeVisible();
       // German: "Zurück zum Login"
@@ -140,7 +140,7 @@ test.describe('PROJ-1: User Authentication', () => {
     test('should validate email on forgot password form', async ({ page }) => {
       await page.goto('/auth/forgot-password');
 
-      await page.getByLabel(/e-mail/i).fill('invalid-email');
+      await page.getByLabel('E-Mail').fill('invalid-email');
       await page.getByRole('button', { name: /senden|zurücksetzen|passwort/i }).click();
 
       await expect(page.getByText(/ungültige e-mail|ungültig/i)).toBeVisible({ timeout: 5000 });

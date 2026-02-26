@@ -12,6 +12,8 @@ export default defineConfig({
   expect: {
     timeout: 10000, // 10 seconds for assertions
   },
+  // Global setup for test user seeding
+  globalSetup: './tests/global-setup.ts',
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',

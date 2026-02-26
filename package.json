@@ -14,7 +14,10 @@
     "test:firefox": "playwright test --project=firefox",
     "test:webkit": "playwright test --project=webkit",
     "test:mobile": "playwright test --project='Mobile Chrome' --project='Mobile Safari'",
-    "test:report": "playwright show-html-report"
+    "test:report": "playwright show-html-report",
+    "test:seed-users": "npx ts-node scripts/seed-test-users.ts",
+    "test:e2e": "playwright test --project=e2e-chromium",
+    "test:journeys": "playwright test --project=journeys-chromium"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

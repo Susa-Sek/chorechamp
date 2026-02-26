@@ -19,8 +19,8 @@ test.describe('PROJ-1: Responsive Design Tests', () => {
       await page.goto('/auth/login');
 
       // Form should be visible and usable - German labels
-      await expect(page.getByLabel(/e-mail/i)).toBeVisible();
-      await expect(page.getByLabel(/passwort/i)).toBeVisible();
+      await expect(page.getByLabel('E-Mail')).toBeVisible();
+      await expect(page.getByLabel('Passwort')).toBeVisible();
       await expect(page.getByRole('button', { name: /anmelden/i })).toBeVisible();
 
       // Form should fit within viewport
@@ -35,10 +35,10 @@ test.describe('PROJ-1: Responsive Design Tests', () => {
       await page.goto('/auth/register');
 
       // Form should be visible and usable - German labels
-      await expect(page.getByLabel(/anzeigename/i)).toBeVisible();
-      await expect(page.getByLabel(/e-mail/i)).toBeVisible();
-      await expect(page.getByLabel(/^passwort/i)).toBeVisible();
-      await expect(page.getByLabel(/passwort bestätigen/i)).toBeVisible();
+      await expect(page.getByLabel('Anzeigename')).toBeVisible();
+      await expect(page.getByLabel('E-Mail')).toBeVisible();
+      await expect(page.getByLabel('Passwort').first()).toBeVisible();
+      await expect(page.getByLabel('Passwort bestätigen')).toBeVisible();
     });
 
     test('forgot password form should be responsive on mobile', async ({ page }) => {
@@ -65,14 +65,14 @@ test.describe('PROJ-1: Responsive Design Tests', () => {
     test('login form should be responsive on tablet', async ({ page }) => {
       await page.goto('/auth/login');
 
-      await expect(page.getByLabel(/e-mail/i)).toBeVisible();
+      await expect(page.getByLabel('E-Mail')).toBeVisible();
       await expect(page.getByRole('button', { name: /anmelden/i })).toBeVisible();
     });
 
     test('register form should be responsive on tablet', async ({ page }) => {
       await page.goto('/auth/register');
 
-      await expect(page.getByLabel(/anzeigename/i)).toBeVisible();
+      await expect(page.getByLabel('Anzeigename')).toBeVisible();
       await expect(page.getByRole('button', { name: /konto erstellen/i })).toBeVisible();
     });
   });
@@ -96,14 +96,14 @@ test.describe('PROJ-1: Responsive Design Tests', () => {
     test('login form should be responsive on desktop', async ({ page }) => {
       await page.goto('/auth/login');
 
-      await expect(page.getByLabel(/e-mail/i)).toBeVisible();
+      await expect(page.getByLabel('E-Mail')).toBeVisible();
       await expect(page.getByRole('button', { name: /anmelden/i })).toBeVisible();
     });
 
     test('register form should be responsive on desktop', async ({ page }) => {
       await page.goto('/auth/register');
 
-      await expect(page.getByLabel(/anzeigename/i)).toBeVisible();
+      await expect(page.getByLabel('Anzeigename')).toBeVisible();
       await expect(page.getByRole('button', { name: /konto erstellen/i })).toBeVisible();
     });
   });

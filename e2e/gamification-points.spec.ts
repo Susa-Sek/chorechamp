@@ -9,7 +9,7 @@ const TEST_USER_PASSWORD = 'TestPassword123!';
 // Helper function to login
 async function login(page: Page) {
   await page.goto('/auth/login');
-  await page.getByLabel('Email').fill(TEST_USER_EMAIL);
+  await page.getByLabel('E-Mail').fill(TEST_USER_EMAIL);
   await page.getByLabel('Passwort').fill(TEST_USER_PASSWORD);
   await page.getByRole('button', { name: 'Anmelden' }).click();
 

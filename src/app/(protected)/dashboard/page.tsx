@@ -79,8 +79,8 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Willkommen zuruck, {profile?.displayName || "Champ"}!
+          <h1 className="text-3xl font-bold mb-2" data-testid="welcome-heading">
+            Willkommen zuruck, <span data-testid="display-name">{profile?.displayName || "Champ"}</span>!
           </h1>
           <p className="text-muted-foreground">
             Hier ist deine Ubersicht fur heute.

@@ -470,7 +470,7 @@ export default function HouseholdPage() {
                         className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
                       >
                         <div className="flex items-center gap-3">
-                          <code className="font-mono text-lg tracking-wider bg-background px-3 py-1 rounded">
+                          <code className="font-mono text-lg tracking-wider bg-background px-3 py-1 rounded" data-testid="invite-code">
                             {code.code}
                           </code>
                           <div>

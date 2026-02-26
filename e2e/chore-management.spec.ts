@@ -10,10 +10,10 @@ const TEST_USER = {
 // Helper to register and login
 async function registerAndLogin(page: Page) {
   await page.goto('/auth/register');
-  await page.getByLabel(/anzeigename/i).fill(TEST_USER.displayName);
-  await page.getByLabel(/e-mail/i).fill(TEST_USER.email);
-  await page.getByLabel(/^passwort/i).fill(TEST_USER.password);
-  await page.getByLabel(/passwort bestatigen/i).fill(TEST_USER.password);
+  await page.getByLabel('Anzeigename').fill(TEST_USER.displayName);
+  await page.getByLabel('E-Mail').fill(TEST_USER.email);
+  await page.getByLabel('Passwort').first().fill(TEST_USER.password);
+  await page.getByLabel('Passwort bestätigen').fill(TEST_USER.password);
   await page.getByRole('button', { name: /konto erstellen/i }).click();
 
   // Wait for redirect after registration
@@ -23,7 +23,7 @@ async function registerAndLogin(page: Page) {
 // Helper to create a household
 async function createHousehold(page: Page) {
   await page.goto('/household/create');
-  await page.getByLabel(/name.*haushalt/i).fill('Test Household');
+  await page.getByLabel(/haushaltsname|name/i).fill('Test Household');
   await page.getByRole('button', { name: /erstellen|haushalt erstellen/i }).click();
   await page.waitForURL(/\/(household|dashboard|chores)/, { timeout: 10000 });
 }
@@ -59,7 +59,7 @@ async function createChore(page: Page, title: string, options: {
 
   // Set due date if provided
   if (options.dueDate) {
-    await page.getByLabel(/fallig|due/i).fill(options.dueDate);
+    await page.getByLabel(/fällig|due/i).fill(options.dueDate);
   }
 
   // Submit form
@@ -98,7 +98,7 @@ test.describe('PROJ-3: Chore Management', () => {
       await expect(page.getByLabel(/punkte/i)).toBeVisible();
 
       // Check for due date field
-      await expect(page.getByLabel(/fallig|due/i)).toBeVisible();
+      await expect(page.getByLabel(/fällig|due/i)).toBeVisible();
 
       // Check for create button
       await expect(page.getByRole('button', { name: /aufgabe erstellen/i })).toBeVisible();
@@ -172,7 +172,7 @@ test.describe('PROJ-3: Chore Management', () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const dateStr = tomorrow.toISOString().split('T')[0];
 
-      await page.getByLabel(/fallig|due/i).fill(dateStr);
+      await page.getByLabel(/fällig|due/i).fill(dateStr);
 
       // Create chore
       await page.getByLabel(/titel/i).fill('Chore with due date');

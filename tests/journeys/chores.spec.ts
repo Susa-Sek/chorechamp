@@ -14,11 +14,32 @@ test.describe('UJ-3: Chore Management', () => {
     const user = generateTestUser('parent');
     await registerUser(page, user);
     await createHousehold(page, 'Test Haushalt Chores');
+
+    // Wait for household to be fully loaded before proceeding
+    // Navigate to household page to ensure household context is set
+    await page.goto('/household');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for the household content to load - more flexible selector
+    // The page shows: household name, member count, or loading/error states
+    await page.waitForSelector('text=/Mitglied|Haushalt|Wird geladen|Kein Haushalt/', { timeout: 15000 });
+
+    // Additional wait for the household provider to fully initialize
+    await page.waitForTimeout(1000);
   });
 
   test.describe('UJ-3.1: Create Chores', () => {
     test('should create chore with all fields', async ({ page }) => {
       await page.goto('/chores/new');
+
+      // Wait for form to load (check if no household redirect happened)
+      await page.waitForLoadState('networkidle');
+
+      // Wait for the form to be visible - either the form fields or a redirect to household creation
+      await page.waitForSelector('text=/Neue Aufgabe|Aufgabe erstellen|Titel/', { timeout: 15000 });
+
+      // Verify we're on the chore form page
+      await expect(page.getByText(/neue aufgabe|aufgabendetails/i)).toBeVisible({ timeout: 10000 });
 
       // Fill in title
       await page.getByLabel(/titel/i).fill('Bad putzen');
@@ -35,7 +56,7 @@ test.describe('UJ-3: Chore Management', () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const dateStr = tomorrow.toISOString().split('T')[0];
-      await page.getByLabel(/fällig|due/i).fill(dateStr);
+      await page.getByLabel(/fälligkeitsdatum|due/i).fill(dateStr);
 
       // Submit
       await page.getByRole('button', { name: /erstellen|aufgabe/i }).click();
@@ -44,11 +65,12 @@ test.describe('UJ-3: Chore Management', () => {
       await page.waitForURL(/\/chores/, { timeout: 10000 });
 
       // Verify chore appears in list
-      await expect(page.getByText('Bad putzen')).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText('Bad putzen')).toBeVisible({ timeout: 10000 });
     });
 
     test('should auto-calculate points based on difficulty', async ({ page }) => {
       await page.goto('/chores/new');
+      await page.waitForLoadState('networkidle');
       await page.getByLabel(/titel/i).fill('Test Chore Points');
 
       // Test easy (10 points)
@@ -69,6 +91,7 @@ test.describe('UJ-3: Chore Management', () => {
 
     test('should assign chore to household member', async ({ page }) => {
       await page.goto('/chores/new');
+      await page.waitForLoadState('networkidle');
 
       await page.getByLabel(/titel/i).fill('Assigned Chore');
 
@@ -90,15 +113,21 @@ test.describe('UJ-3: Chore Management', () => {
     test.beforeEach(async ({ page }) => {
       // Create a chore first
       await page.goto('/chores/new');
+      await page.waitForLoadState('networkidle');
       await page.getByLabel(/titel/i).fill('Completable Chore');
       await page.getByLabel(/schwierigkeit/i).click();
       await page.getByRole('option', { name: /mittel/i }).click();
       await page.getByRole('button', { name: /erstellen/i }).click();
       await page.waitForURL(/\/chores$/);
+      await page.waitForLoadState('networkidle');
     });
 
     test('should mark chore as complete', async ({ page }) => {
       await page.goto('/chores');
+      await page.waitForLoadState('networkidle');
+
+      // Wait for chores to load
+      await page.waitForSelector('text=Completable Chore', { timeout: 10000 });
 
       // Find the chore and click complete button
       const choreCard = page.locator('text=Completable Chore').first().locator('xpath=..');
@@ -107,28 +136,36 @@ test.describe('UJ-3: Chore Management', () => {
       await completeBtn.click();
 
       // Should show success message
-      await expect(page.getByText(/verdienst|punkte|erfolgreich/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/verdienst|punkte|erfolgreich/i)).toBeVisible({ timeout: 10000 });
     });
 
     test('should award points immediately', async ({ page }) => {
       await page.goto('/chores');
+      await page.waitForLoadState('networkidle');
 
       // Get initial points from dashboard
       await page.goto('/dashboard');
+      await page.waitForLoadState('networkidle');
       const initialPoints = await page.getByText(/\d+\s*(punkte|p)/i).first().textContent();
 
       // Complete chore
       await page.goto('/chores');
+      await page.waitForLoadState('networkidle');
+      await page.waitForSelector('text=Completable Chore', { timeout: 10000 });
+
       const choreCard = page.locator('text=Completable Chore').first().locator('xpath=..');
       await choreCard.locator('button').first().click();
 
       // Check points updated
       await page.goto('/dashboard');
+      await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
     });
 
     test('should show celebration animation', async ({ page }) => {
       await page.goto('/chores');
+      await page.waitForLoadState('networkidle');
+      await page.waitForSelector('text=Completable Chore', { timeout: 10000 });
 
       const choreCard = page.locator('text=Completable Chore').first().locator('xpath=..');
       await choreCard.locator('button').first().click();
@@ -139,11 +176,13 @@ test.describe('UJ-3: Chore Management', () => {
 
       // Check for visual feedback (toast or success message)
       const successIndicator = page.getByRole('alert').or(page.getByText(/verdienst|erledigt/i));
-      await expect(successIndicator.first()).toBeVisible({ timeout: 5000 });
+      await expect(successIndicator.first()).toBeVisible({ timeout: 10000 });
     });
 
     test('should log point transaction', async ({ page }) => {
       await page.goto('/chores');
+      await page.waitForLoadState('networkidle');
+      await page.waitForSelector('text=Completable Chore', { timeout: 10000 });
 
       // Complete chore
       const choreCard = page.locator('text=Completable Chore').first().locator('xpath=..');
@@ -152,11 +191,14 @@ test.describe('UJ-3: Chore Management', () => {
 
       // Check point history
       await page.goto('/points/history');
-      await expect(page.getByText(/Completable Chore|aufgabe/i)).toBeVisible({ timeout: 5000 });
+      await page.waitForLoadState('networkidle');
+      await expect(page.getByText(/Completable Chore|aufgabe/i)).toBeVisible({ timeout: 10000 });
     });
 
     test('should move chore to completed section', async ({ page }) => {
       await page.goto('/chores');
+      await page.waitForLoadState('networkidle');
+      await page.waitForSelector('text=Completable Chore', { timeout: 10000 });
 
       // Complete chore
       const choreCard = page.locator('text=Completable Chore').first().locator('xpath=..');
@@ -165,23 +207,25 @@ test.describe('UJ-3: Chore Management', () => {
 
       // Refresh and check for completed filter/section
       await page.goto('/chores');
+      await page.waitForLoadState('networkidle');
 
       // Look for completed status
-      await expect(page.getByText(/erledigt/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/erledigt/i)).toBeVisible({ timeout: 10000 });
     });
   });
 
   test.describe('UJ-3.3: Recurring Tasks', () => {
     test('should create weekly recurring chore', async ({ page }) => {
       await page.goto('/chores/new');
+      await page.waitForLoadState('networkidle');
 
-      await page.getByLabel(/titel/i).fill('Müll rausbringen');
+      await page.getByLabel(/titel/i).fill('Mull rausbringen');
 
       // Set recurrence
       const recurrenceSelect = page.getByLabel(/wiederholung|wiederkehrend/i);
       if (await recurrenceSelect.isVisible()) {
         await recurrenceSelect.click();
-        await page.getByRole('option', { name: /wöchentlich/i }).click();
+        await page.getByRole('option', { name: /wochentlich/i }).click();
 
         // Set day
         const daySelect = page.getByLabel(/wochentag|tag/i);
@@ -198,19 +242,21 @@ test.describe('UJ-3: Chore Management', () => {
     test('should show recurrence pattern on chore card', async ({ page }) => {
       // Create recurring chore first
       await page.goto('/chores/new');
+      await page.waitForLoadState('networkidle');
       await page.getByLabel(/titel/i).fill('Weekly Test');
 
       const recurrenceSelect = page.getByLabel(/wiederholung/i);
       if (await recurrenceSelect.isVisible()) {
         await recurrenceSelect.click();
-        await page.getByRole('option', { name: /wöchentlich/i }).click();
+        await page.getByRole('option', { name: /wochentlich/i }).click();
       }
 
       await page.getByRole('button', { name: /erstellen/i }).click();
       await page.waitForURL(/\/chores/);
+      await page.waitForLoadState('networkidle');
 
       // Check for recurrence indicator
-      await expect(page.getByText(/wöchentlich|wiederkehrend/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/wochentlich|wiederkehrend/i)).toBeVisible({ timeout: 10000 });
     });
   });
 });

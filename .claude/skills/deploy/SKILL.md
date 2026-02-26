@@ -5,6 +5,7 @@ argument-hint: [feature-spec-path or "to Vercel"]
 user-invocable: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 model: sonnet
+supportsProgrammatic: true
 ---
 
 # DevOps Engineer
@@ -12,11 +13,69 @@ model: sonnet
 ## Role
 You are an experienced DevOps Engineer handling deployment, environment setup, and production readiness.
 
+## Programmatic Mode Detection
+
+**Check for orchestration status file:** `features/orchestration-status.json`
+
+If this file exists, you are running in **Programmatic Mode**:
+- Skip ALL user confirmations
+- Auto-deploy if all pre-deployment checks pass
+- Skip manual production verification steps (assume automated)
+- Auto-commit and create git tags
+- Output completion signal to status file
+
+### Programmatic Mode Behavior
+- Run all pre-deployment checks automatically
+- If checks fail: Log error and report to orchestrator (don't deploy)
+- If checks pass: Deploy immediately without confirmation
+- Auto-update feature status to "Deployed"
+- Auto-create git tag with version
+- Skip post-deployment manual verification steps
+
 ## Before Starting
 1. Read `features/INDEX.md` to know what is being deployed
 2. Check QA status in the feature spec
 3. Verify no Critical/High bugs exist in QA results
 4. If QA has not been done, tell the user: "Run `/qa` first before deploying."
+
+## Automatic Token Detection
+
+The skill automatically finds credentials in these locations:
+
+| Service | Location | Variable/Path |
+|---------|----------|---------------|
+| Vercel | `~/.vercel/auth.json` | `token` field |
+| Supabase | `.env.local` | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Database | `.env.local` | `DATABASE_URL` or Supabase connection string |
+
+### Vercel Token Auto-Detection
+```bash
+# Read token from Vercel auth file
+VERCEL_TOKEN=$(cat ~/.vercel/auth.json 2>/dev/null | jq -r '.token')
+
+# Deploy with token
+vercel --prod --token "$VERCEL_TOKEN"
+```
+
+If no token is found, the skill will:
+1. Check `~/.vercel/auth.json`
+2. Check `VERCEL_TOKEN` environment variable
+3. Fall back to `vercel login` for interactive auth
+
+## Vercel Skills Reference
+
+The following Vercel skills are available and should be used:
+
+| Skill | Purpose | Command |
+|-------|---------|---------|
+| `vercel:setup` | Configure Vercel CLI and project | `/vercel:setup` |
+| `vercel:deploy` | Deploy to Vercel | `/vercel:deploy` |
+| `vercel:logs` | View deployment logs | `/vercel:logs` |
+
+**When to use:**
+- First deployment: Use `/vercel:setup` to configure CLI
+- Standard deployment: Use `/vercel:deploy` instead of manual `npx vercel --prod`
+- Debugging: Use `/vercel:logs` to check deployment issues
 
 ## Workflow
 
@@ -39,8 +98,16 @@ Guide the user through:
 - [ ] Configure domain (or use default `*.vercel.app`)
 
 ### 3. Deploy
+
+**Empfohlen: Automatisches Deployment-Script**
+```bash
+./scripts/deploy.sh --prod
+```
+Dieses Script findet automatisch den Vercel-Token aus `~/.vercel/auth.json`.
+
+**Manuelle Optionen:**
 - Push to main branch → Vercel auto-deploys
-- Or manual: `npx vercel --prod`
+- `vercel --prod --token "$(cat ~/.vercel/auth.json | jq -r '.token')"`
 - Monitor build in Vercel Dashboard
 
 ### 4. Post-Deployment Verification
@@ -103,6 +170,33 @@ If production is broken:
 - [ ] `features/INDEX.md` updated to Deployed
 - [ ] Git tag created and pushed
 - [ ] User has verified production deployment
+
+## Completion Signal (Programmatic Mode)
+
+When in programmatic mode, output a completion signal:
+```json
+// Update features/orchestration-status.json
+{
+  "features": {
+    "PROJ-X": {
+      "phases": {
+        "deploy": "completed"
+      },
+      "status": "deployed",
+      "deployedAt": "ISO8601 timestamp",
+      "productionUrl": "https://..."
+    }
+  },
+  "completedFeatures": ["PROJ-X"]
+}
+```
+
+Also output a summary:
+```
+DEPLOY_PHASE_COMPLETE: PROJ-X
+Production URL: https://...
+Git tag: v1.X.0-PROJ-X
+```
 
 ## Git Commit
 ```
