@@ -1,43 +1,63 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './e2e',
-  fullyParallel: true,
+  // Support both e2e/ (existing tests) and tests/journeys/ (PROJ-9 user journey tests)
+  testDir: './tests/journeys',
+  fullyParallel: false, // Sequential for dependent tests (serial mode)
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
+  timeout: 60000, // 60 seconds per test
+  expect: {
+    timeout: 10000, // 10 seconds for assertions
+  },
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    actionTimeout: 10000,
+    navigationTimeout: 30000,
   },
   projects: [
-    // Cross-browser testing
+    // User Journey Tests - Desktop Chrome (primary)
     {
-      name: 'chromium',
+      name: 'journeys-chromium',
+      testDir: './tests/journeys',
       use: { ...devices['Desktop Chrome'] },
     },
+    // Existing E2E Tests
     {
-      name: 'firefox',
+      name: 'e2e-chromium',
+      testDir: './e2e',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // Cross-browser testing
+    {
+      name: 'e2e-firefox',
+      testDir: './e2e',
       use: { ...devices['Desktop Firefox'] },
     },
     {
-      name: 'webkit',
+      name: 'e2e-webkit',
+      testDir: './e2e',
       use: { ...devices['Desktop Safari'] },
     },
     // Responsive testing (mobile & tablet)
     {
-      name: 'Mobile Chrome',
+      name: 'e2e-mobile-chrome',
+      testDir: './e2e',
       use: { ...devices['Pixel 5'] },
     },
     {
-      name: 'Mobile Safari',
+      name: 'e2e-mobile-safari',
+      testDir: './e2e',
       use: { ...devices['iPhone 12'] },
     },
     {
-      name: 'Tablet',
+      name: 'e2e-tablet',
+      testDir: './e2e',
       use: { ...devices['iPad Pro'] },
     },
   ],
