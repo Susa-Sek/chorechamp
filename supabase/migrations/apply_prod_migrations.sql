@@ -344,6 +344,56 @@ GRANT EXECUTE ON FUNCTION public.handle_household_creation() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.handle_household_join() TO authenticated;
 
 -- ============================================================================
+-- PART 5: HOUSEHOLD RLS FIX (BUG-1)
+-- Fix for household creation returning 403 Forbidden
+-- ============================================================================
+
+-- Fix households INSERT policy
+DROP POLICY IF EXISTS "Authenticated users can create households" ON public.households;
+DROP POLICY IF EXISTS "Users can create households" ON public.households;
+
+CREATE POLICY "Authenticated users can create households"
+  ON public.households FOR INSERT
+  WITH CHECK (auth.uid() = created_by);
+
+-- Fix household_members INSERT policy
+DROP POLICY IF EXISTS "Users can join households via invite" ON public.household_members;
+DROP POLICY IF EXISTS "Users can insert themselves into household_members" ON public.household_members;
+
+CREATE POLICY "Users can insert themselves as members"
+  ON public.household_members FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Fix households SELECT policy
+DROP POLICY IF EXISTS "Users can view their own household" ON public.households;
+DROP POLICY IF EXISTS "Users can view households they belong to" ON public.households;
+
+CREATE POLICY "Users can view their households"
+  ON public.households FOR SELECT
+  USING (
+    id IN (
+      SELECT household_id FROM household_members WHERE user_id = auth.uid()
+    )
+  );
+
+-- Fix household_members SELECT policy
+DROP POLICY IF EXISTS "Users can view members of their household" ON public.household_members;
+
+CREATE POLICY "Users can view household members"
+  ON public.household_members FOR SELECT
+  USING (
+    household_id IN (
+      SELECT household_id FROM household_members WHERE user_id = auth.uid()
+    )
+  );
+
+-- Ensure grants are correct
+GRANT INSERT ON public.households TO authenticated;
+GRANT SELECT ON public.households TO authenticated;
+GRANT INSERT ON public.household_members TO authenticated;
+GRANT SELECT ON public.household_members TO authenticated;
+
+-- ============================================================================
 -- DONE! Verify with:
 -- SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('rewards', 'redemptions', 'user_levels', 'badge_definitions', 'user_badges', 'badge_progress', 'point_balances', 'user_streaks');
 -- ============================================================================

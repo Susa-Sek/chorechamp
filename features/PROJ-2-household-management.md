@@ -2,6 +2,7 @@
 
 > Status: In Review
 > Created: 2026-02-23
+> Updated: 2026-02-26
 > Dependencies: PROJ-1 (User Authentication)
 
 ## Overview
@@ -468,3 +469,50 @@ ALTER TABLE invite_codes ENABLE ROW LEVEL SECURITY;
 | Medium Bugs | 2 |
 
 **Overall Status:** BLOCKED - Critical RLS bug must be fixed before deployment.
+
+---
+
+## Bug Fixes
+
+### BUG-1: Household Creation RLS Fix - FIXED (2026-02-26)
+
+**Issue:** Household creation returns 403 Forbidden - RLS INSERT policy missing or not working
+
+**Root Cause:** The RLS policies for `households` and `household_members` tables were not correctly configured to allow authenticated users to create households and add themselves as admin members.
+
+**Fix Applied:**
+- Migration: `/supabase/migrations/20260226000002_fix_household_rls_complete.sql`
+- Updated production migrations: `/supabase/migrations/apply_prod_migrations.sql`
+
+**RLS Policies Fixed:**
+
+1. **households INSERT policy:**
+   ```sql
+   CREATE POLICY "Authenticated users can create households"
+     ON public.households FOR INSERT
+     WITH CHECK (auth.uid() = created_by);
+   ```
+
+2. **household_members INSERT policy:**
+   ```sql
+   CREATE POLICY "Users can insert themselves as members"
+     ON public.household_members FOR INSERT
+     WITH CHECK (auth.uid() = user_id);
+   ```
+
+3. **households SELECT policy:**
+   ```sql
+   CREATE POLICY "Users can view their households"
+     ON public.households FOR SELECT
+     USING (
+       id IN (
+         SELECT household_id FROM household_members WHERE user_id = auth.uid()
+       )
+     );
+   ```
+
+**Deployment Instructions:**
+1. Go to Supabase Dashboard > SQL Editor
+2. Copy the contents of `apply_prod_migrations.sql` (Part 5 section)
+3. Execute the SQL
+4. Verify household creation works
