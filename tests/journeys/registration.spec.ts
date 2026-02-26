@@ -23,11 +23,11 @@ test.describe('UJ-1: New User Registration & Onboarding', () => {
         await page.goto('/auth/register');
       }
 
-      // Step 3-6: Fill registration form
-      await page.getByLabel(/anzeigename/i).fill(user.displayName);
-      await page.getByLabel(/e-mail/i).fill(user.email);
-      await page.getByLabel(/^passwort/i).fill(user.password);
-      await page.getByLabel(/passwort bestätigen/i).fill(user.password);
+      // Step 3-6: Fill registration form using placeholder selectors
+      await page.getByPlaceholder(/dein name|name/i).fill(user.displayName);
+      await page.getByPlaceholder(/@|email/i).fill(user.email);
+      await page.getByPlaceholder(/••••••••|passwort/i).first().fill(user.password);
+      await page.getByPlaceholder(/bestätigen/i).fill(user.password);
 
       // Step 7: Click "Konto erstellen"
       await page.getByRole('button', { name: /konto erstellen/i }).click();
@@ -43,10 +43,10 @@ test.describe('UJ-1: New User Registration & Onboarding', () => {
       await page.goto('/auth/register');
 
       // Try to register with existing email
-      await page.getByLabel(/anzeigename/i).fill('Duplicate User');
-      await page.getByLabel(/e-mail/i).fill(TEST_USERS.parent.email);
-      await page.getByLabel(/^passwort/i).fill('Test1234!');
-      await page.getByLabel(/passwort bestätigen/i).fill('Test1234!');
+      await page.getByPlaceholder(/dein name|name/i).fill('Duplicate User');
+      await page.getByPlaceholder(/@|email/i).fill(TEST_USERS.parent.email);
+      await page.getByPlaceholder(/••••••••|passwort/i).first().fill('Test1234!');
+      await page.getByPlaceholder(/bestätigen/i).fill('Test1234!');
       await page.getByRole('button', { name: /konto erstellen/i }).click();
 
       // Should show error for duplicate email
@@ -57,10 +57,10 @@ test.describe('UJ-1: New User Registration & Onboarding', () => {
       await page.goto('/auth/register');
 
       const user = generateTestUser('solo');
-      await page.getByLabel(/anzeigename/i).fill(user.displayName);
-      await page.getByLabel(/e-mail/i).fill(user.email);
-      await page.getByLabel(/^passwort/i).fill('weak');
-      await page.getByLabel(/passwort bestätigen/i).fill('weak');
+      await page.getByPlaceholder(/dein name|name/i).fill(user.displayName);
+      await page.getByPlaceholder(/@|email/i).fill(user.email);
+      await page.getByPlaceholder(/••••••••|passwort/i).first().fill('weak');
+      await page.getByPlaceholder(/bestätigen/i).fill('weak');
       await page.getByRole('button', { name: /konto erstellen/i }).click();
 
       // Should show password strength error
@@ -105,8 +105,8 @@ test.describe('UJ-1: New User Registration & Onboarding', () => {
       const password = process.env.TEST_USER_PASSWORD || 'Test1234!';
 
       await page.goto('/auth/login');
-      await page.getByLabel(/e-mail/i).fill(email);
-      await page.getByLabel(/passwort/i).fill(password);
+      await page.getByPlaceholder(/@|email/i).fill(email);
+      await page.getByPlaceholder(/••••••••|passwort/i).fill(password);
       await page.getByRole('button', { name: /anmelden/i }).click();
 
       // Verify redirect to dashboard
@@ -118,8 +118,8 @@ test.describe('UJ-1: New User Registration & Onboarding', () => {
       const password = process.env.TEST_USER_PASSWORD || 'Test1234!';
 
       await page.goto('/auth/login');
-      await page.getByLabel(/e-mail/i).fill(email);
-      await page.getByLabel(/passwort/i).fill(password);
+      await page.getByPlaceholder(/@|email/i).fill(email);
+      await page.getByPlaceholder(/••••••••|passwort/i).fill(password);
 
       const submitBtn = page.getByRole('button', { name: /anmelden/i });
       await submitBtn.click();
@@ -143,8 +143,8 @@ test.describe('UJ-1: New User Registration & Onboarding', () => {
 
     test('should show error for invalid credentials', async ({ page }) => {
       await page.goto('/auth/login');
-      await page.getByLabel(/e-mail/i).fill('nonexistent@test.com');
-      await page.getByLabel(/passwort/i).fill('WrongPassword123!');
+      await page.getByPlaceholder(/@|email/i).fill('nonexistent@test.com');
+      await page.getByPlaceholder(/••••••••|passwort/i).fill('WrongPassword123!');
       await page.getByRole('button', { name: /anmelden/i }).click();
 
       // Should show error message
@@ -162,7 +162,7 @@ test.describe('UJ-1: New User Registration & Onboarding', () => {
     test('should send password reset email', async ({ page }) => {
       await page.goto('/auth/forgot-password');
 
-      await page.getByLabel(/e-mail/i).fill('test@example.com');
+      await page.getByPlaceholder(/@|email/i).fill('test@example.com');
       await page.getByRole('button', { name: /senden|zurücksetzen/i }).click();
 
       // Should show success message

@@ -16,10 +16,11 @@ export interface TestUser {
 export async function registerUser(page: Page, user: TestUser): Promise<void> {
   await page.goto('/auth/register');
 
-  await page.getByLabel(/anzeigename/i).fill(user.displayName);
-  await page.getByLabel(/e-mail/i).fill(user.email);
-  await page.getByLabel(/^passwort/i).fill(user.password);
-  await page.getByLabel(/passwort bestätigen/i).fill(user.password);
+  // Use placeholder-based selectors which are more reliable with shadcn/ui forms
+  await page.getByPlaceholder(/dein name|name/i).fill(user.displayName);
+  await page.getByPlaceholder(/@|email/i).fill(user.email);
+  await page.getByPlaceholder(/••••••••|passwort/i).first().fill(user.password);
+  await page.getByPlaceholder(/bestätigen/i).fill(user.password);
   await page.getByRole('button', { name: /konto erstellen/i }).click();
 
   // Wait for redirect after registration
@@ -32,8 +33,8 @@ export async function registerUser(page: Page, user: TestUser): Promise<void> {
 export async function loginUser(page: Page, user: TestUser): Promise<void> {
   await page.goto('/auth/login');
 
-  await page.getByLabel(/e-mail/i).fill(user.email);
-  await page.getByLabel(/passwort/i).fill(user.password);
+  await page.getByPlaceholder(/@|email/i).fill(user.email);
+  await page.getByPlaceholder(/••••••••|passwort/i).fill(user.password);
   await page.getByRole('button', { name: /anmelden/i }).click();
 
   // Wait for redirect
