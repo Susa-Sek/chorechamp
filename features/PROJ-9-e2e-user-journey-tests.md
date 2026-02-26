@@ -1,9 +1,11 @@
 # PROJ-9: E2E User Journey Test Scenarios
 
-> Status: Planned
+> Status: In Review (Tests Need Auth Fix)
 > Created: 2026-02-25
-> Updated: 2026-02-25
+> Updated: 2026-02-26
 > Dependencies: All features (PROJ-1 through PROJ-8)
+> Test Run: 2026-02-26 (6 failed, 1 passed, 67 not run due to dependencies)
+> Production: https://chorechamp-phi.vercel.app
 
 ## Overview
 Comprehensive end-to-end test scenarios covering complete user journeys from registration through gamification. These tests validate the entire ChoreChamp experience as real users would interact with it.
