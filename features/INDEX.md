@@ -20,7 +20,7 @@
 | PROJ-6 | Gamification - Rewards | Deployed | [PROJ-6-gamification-rewards.md](./PROJ-6-gamification-rewards.md) | 2026-02-23 |
 | PROJ-7 | Gamification - Levels & Badges | Deployed | [PROJ-7-gamification-levels-badges.md](./PROJ-7-gamification-levels-badges.md) | 2026-02-23 |
 | PROJ-8 | Database Triggers - User Onboarding | Deployed | [PROJ-8-database-triggers-onboarding.md](./PROJ-8-database-triggers-onboarding.md) | 2026-02-25 |
-| PROJ-9 | E2E User Journey Tests | In Progress | [PROJ-9-e2e-user-journey-tests.md](./PROJ-9-e2e-user-journey-tests.md) | 2026-02-25 |
+| PROJ-9 | E2E User Journey Tests | Completed | [PROJ-9-e2e-user-journey-tests.md](./PROJ-9-e2e-user-journey-tests.md) | 2026-02-25 |
 
 <!-- Add features above this line -->
 
