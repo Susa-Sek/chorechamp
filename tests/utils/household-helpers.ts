@@ -13,10 +13,11 @@ export async function createHousehold(page: Page, name: string): Promise<string>
   // Wait for form to be ready
   await page.waitForLoadState('networkidle');
 
-  // Wait for the form input to be visible
-  await page.waitForSelector('input', { timeout: 10000 });
+  // Wait for the form input to be visible (use placeholder as more reliable)
+  await page.waitForSelector('input[placeholder*="Familie"], input[placeholder*="WG"]', { timeout: 10000 });
 
-  await page.getByLabel(/haushaltsname|name/i).fill(name);
+  // Fill form using placeholder selector
+  await page.getByPlaceholder(/familie|wg|haushalt/i).fill(name);
   await page.getByRole('button', { name: /erstellen|haushalt erstellen/i }).click();
 
   // Wait for redirect to household page or dashboard
@@ -27,13 +28,21 @@ export async function createHousehold(page: Page, name: string): Promise<string>
 
   // Wait for the household to be visible - look for the household name or member section
   // This ensures the household was created and the page is ready
-  await page.waitForSelector('text=/' + name + '|Mitglieder|Haushalt/', { timeout: 15000 }).catch(() => {
+  await page.waitForSelector('text=/' + name + '|Mitglied|Haushalt/', { timeout: 15000 }).catch(() => {
     // If not found, wait a bit more for the household to load
     return page.waitForTimeout(2000);
   });
 
   // Additional wait for the household provider to update
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(1500);
+
+  // Navigate to household page to ensure context is loaded
+  await page.goto('/household');
+  await page.waitForLoadState('networkidle');
+
+  // Wait for loading state to finish (not showing "Wird geladen...")
+  await page.waitForSelector('text=/Mitglied|' + name + '|Kein Haushalt/', { timeout: 10000 });
+  await page.waitForTimeout(500);
 
   // Extract household ID from URL if available
   const url = page.url();
@@ -50,7 +59,8 @@ export async function joinHousehold(page: Page, inviteCode: string): Promise<voi
   // Wait for form to be ready
   await page.waitForLoadState('networkidle');
 
-  await page.getByLabel(/einladungscode|code/i).fill(inviteCode);
+  // Use placeholder selector for more reliability
+  await page.getByPlaceholder(/code|einladungscode/i).fill(inviteCode);
   await page.getByRole('button', { name: /beitreten/i }).click();
 
   // Wait for redirect to household or dashboard

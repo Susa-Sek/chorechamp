@@ -37,24 +37,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch profile from our profiles table
   const fetchProfile = async (userId: string): Promise<Profile | null> => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-    if (error) {
-      console.error("Error fetching profile:", error);
+      if (error) {
+        // Profile might not exist yet (created by trigger async)
+        // Return a default profile based on user metadata
+        console.log("Profile not found, using default:", error.message);
+        return null;
+      }
+
+      return {
+        id: data.id,
+        displayName: data.display_name,
+        avatarUrl: data.avatar_url,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      };
+    } catch (err) {
+      console.error("Error fetching profile:", err);
       return null;
     }
-
-    return {
-      id: data.id,
-      displayName: data.display_name,
-      avatarUrl: data.avatar_url,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
   };
 
   // Initialize auth state
@@ -162,18 +169,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: getErrorMessage(error) };
       }
 
+      // Helper to fetch profile with retries
+      const fetchProfileWithRetry = async (userId: string, retries = 3): Promise<Profile | null> => {
+        for (let i = 0; i < retries; i++) {
+          const profile = await fetchProfile(userId);
+          if (profile) return profile;
+          // Wait a bit before retrying (profile is created by trigger)
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        return null;
+      };
+
       // If no session returned, try to sign in directly
       // (This happens when email confirmation is disabled but signUp doesn't auto-login)
       if (!data.session) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const signInResult = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (signInError) {
+        if (signInResult.error) {
           // User created but can't auto-login - they'll need to login manually
-          console.error("Auto-login after signup failed:", signInError);
+          console.error("Auto-login after signup failed:", signInResult.error);
+        } else if (signInResult.data.session?.user) {
+          // Update auth state immediately after auto-login
+          // Use display name from user metadata as fallback
+          const profile = await fetchProfileWithRetry(signInResult.data.session.user.id);
+          setState({
+            user: mapUser(signInResult.data.session.user),
+            profile: profile || {
+              id: signInResult.data.session.user.id,
+              displayName: signInResult.data.session.user.user_metadata?.display_name || displayName,
+              avatarUrl: null,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+            isLoading: false,
+            isAuthenticated: true,
+          });
         }
+      } else if (data.session?.user) {
+        // Session was returned - update auth state immediately
+        // Use display name from user metadata as fallback
+        const profile = await fetchProfileWithRetry(data.session.user.id);
+        setState({
+          user: mapUser(data.session.user),
+          profile: profile || {
+            id: data.session.user.id,
+            displayName: data.session.user.user_metadata?.display_name || displayName,
+            avatarUrl: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          isLoading: false,
+          isAuthenticated: true,
+        });
       }
 
       // Profile is created automatically by the database trigger

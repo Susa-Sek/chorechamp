@@ -1,10 +1,10 @@
 # PROJ-9: E2E User Journey Test Scenarios
 
-> Status: In Review (Tests Need Auth Fix)
+> Status: In Review (5 passed, 6 failed, 63 not run)
 > Created: 2026-02-25
 > Updated: 2026-02-26
 > Dependencies: All features (PROJ-1 through PROJ-8)
-> Test Run: 2026-02-26 (6 failed, 1 passed, 67 not run due to dependencies)
+> Test Run: 2026-02-26 (5 passed, 6 failed, 63 not run)
 > Production: https://chorechamp-phi.vercel.app
 
 ## Overview

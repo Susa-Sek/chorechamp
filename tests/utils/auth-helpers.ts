@@ -41,9 +41,12 @@ export async function registerUser(page: Page, user: TestUser): Promise<void> {
   await page.goto('/auth/register');
   await page.waitForLoadState('networkidle');
 
-  // Fill registration form using label selectors
-  await page.getByLabel('Anzeigename').fill(user.displayName);
-  await page.getByLabel('E-Mail').fill(user.email);
+  // Wait for form to be visible
+  await page.waitForSelector('form', { timeout: 10000 });
+
+  // Fill registration form using placeholder selectors (more reliable than labels)
+  await page.getByPlaceholder(/dein name|anzeigename/i).fill(user.displayName);
+  await page.getByPlaceholder(/@|e-mail/i).fill(user.email);
 
   // Password fields - use more specific selectors
   const passwordInputs = page.locator('input[type="password"]');
@@ -56,6 +59,16 @@ export async function registerUser(page: Page, user: TestUser): Promise<void> {
   // Wait for redirect after registration
   await page.waitForURL(/\/(dashboard|household)/, { timeout: 20000 });
   await page.waitForLoadState('networkidle');
+
+  // Wait for auth state to settle - look for welcome text or dashboard content
+  // This ensures the auth provider has finished loading
+  await page.waitForSelector('text=/Willkommen|Dashboard|Haushalt|Aufgaben/', { timeout: 10000 }).catch(() => {
+    // If not found, wait a bit more for auth to settle
+    return page.waitForTimeout(2000);
+  });
+
+  // Additional wait for auth context to fully initialize
+  await page.waitForTimeout(1000);
 }
 
 /**
@@ -65,7 +78,10 @@ export async function loginUser(page: Page, user: TestUser): Promise<void> {
   await page.goto('/auth/login');
   await page.waitForLoadState('networkidle');
 
-  await page.getByLabel('E-Mail').fill(user.email);
+  // Wait for form to be visible
+  await page.waitForSelector('form', { timeout: 10000 });
+
+  await page.getByPlaceholder(/@|e-mail/i).fill(user.email);
   await page.locator('input[type="password"]').fill(user.password);
   await page.getByRole('button', { name: /anmelden/i }).click();
 

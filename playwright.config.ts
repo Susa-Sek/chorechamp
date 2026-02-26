@@ -27,7 +27,12 @@ export default defineConfig({
     {
       name: 'journeys-chromium',
       testDir: './tests/journeys',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        },
+      },
     },
     // Existing E2E Tests
     {
